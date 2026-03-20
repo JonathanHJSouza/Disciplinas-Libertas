@@ -1,0 +1,347 @@
+
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-sans); }
+
+#ruler-wrap {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
+  border: 0.5px solid var(--color-border-tertiary);
+  padding: 20px 16px 12px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+#ruler-svg { display: block; min-width: 560px; }
+
+#tree-wrap {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
+  border: 0.5px solid var(--color-border-tertiary);
+  padding: 16px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+#tree-svg { display: block; min-width: 560px; }
+
+#log-box {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-tertiary);
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  min-height: 44px;
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.ctrl-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-left: 8px;
+}
+#step-counter {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  margin-left: auto;
+}
+</style>
+
+<div style="padding: 1rem 0">
+
+  <div id="ruler-wrap">
+    <svg id="ruler-svg" viewBox="0 0 580 110" width="100%"></svg>
+  </div>
+
+  <div id="tree-wrap">
+    <svg id="tree-svg" viewBox="0 0 580 240" width="100%"></svg>
+  </div>
+
+  <div id="log-box">Pressione "Próximo" para iniciar a recursão.</div>
+
+  <div class="controls">
+    <button id="btn-prev" onclick="go(-1)">‹ Anterior</button>
+    <button id="btn-next" onclick="go(1)" style="font-weight:500">Próximo ›</button>
+    <button id="btn-auto" onclick="toggleAuto()">▷ Auto</button>
+    <button onclick="reset()" style="color:var(--color-text-secondary)">↺ Reiniciar</button>
+    <span class="ctrl-label">Velocidade</span>
+    <input type="range" min="1" max="5" value="3" step="1" id="speed" style="width:80px">
+    <span id="step-counter">passo 0 / 0</span>
+  </div>
+
+  <div style="font-size:12px; color:var(--color-text-tertiary); display:flex; gap:16px; flex-wrap:wrap; padding-bottom:4px">
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#1D9E75"></span> chamada atual
+    </span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#EF9F27"></span> retornando (backtrack)
+    </span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#534AB7"></span> concluída
+    </span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#D85A30"></span> marca na régua
+    </span>
+  </div>
+</div>
+
+<script>
+const TOTAL = 16, H = 4;
+
+function buildSteps() {
+  const steps = [];
+  const marks = [];
+  function rec(l, r, h, nodeId) {
+    steps.push({ type:'enter', l, r, h, nodeId, marks:[...marks] });
+    if (h <= 0) {
+      steps.push({ type:'base', l, r, h, nodeId, marks:[...marks] });
+      return;
+    }
+    const m = (l + r) >> 1;
+    marks.push({ pos: m, h });
+    steps.push({ type:'mark', l, r, h, m, nodeId, marks:[...marks] });
+    const leftId  = nodeId + 'L';
+    const rightId = nodeId + 'R';
+    rec(l, m, h - 1, leftId);
+    steps.push({ type:'back_left', l, r, h, nodeId, marks:[...marks] });
+    rec(m, r, h - 1, rightId);
+    steps.push({ type:'done', l, r, h, nodeId, marks:[...marks] });
+  }
+  rec(0, TOTAL, H, 'root');
+  return steps;
+}
+
+const STEPS = buildSteps();
+
+function buildTree() {
+  const nodes = {}, edges = [];
+  function walk(l, r, h, id, px, py) {
+    const label = `regua(${l},${r},${h})`;
+    nodes[id] = { l, r, h, label, x: px, y: py };
+    if (h <= 0) return;
+    const m = (l + r) >> 1;
+    const dy = 44, spread = (r - l) * 17;
+    const lx = px - spread / 2, rx = px + spread / 2;
+    const cy = py + dy;
+    edges.push({ from: id, to: id+'L', x1:px, y1:py+14, x2:lx, y2:cy-14 });
+    edges.push({ from: id, to: id+'R', x1:px, y1:py+14, x2:rx, y2:cy-14 });
+    walk(l, m, h-1, id+'L', lx, cy);
+    walk(m, r, h-1, id+'R', rx, cy);
+  }
+  walk(0, TOTAL, H, 'root', 290, 20);
+  return { nodes, edges };
+}
+
+const TREE = buildTree();
+
+let stepIdx = 0, autoTimer = null;
+
+function currentState() {
+  return STEPS[Math.min(stepIdx, STEPS.length - 1)];
+}
+
+function activeNodeIds() {
+  const s = currentState();
+  const active = new Set(), done = new Set(), returning = new Set();
+  for (let i = 0; i <= Math.min(stepIdx, STEPS.length - 1); i++) {
+    const st = STEPS[i];
+    if (st.type === 'enter') active.add(st.nodeId);
+    if (st.type === 'done')  { done.add(st.nodeId); active.delete(st.nodeId); }
+    if (st.type === 'base')  { done.add(st.nodeId); active.delete(st.nodeId); }
+    if (st.type === 'back_left') returning.add(st.nodeId);
+  }
+  const cur = currentState().nodeId;
+  return { active, done, returning, cur };
+}
+
+function drawRuler() {
+  const svg = document.getElementById('ruler-svg');
+  svg.innerHTML = '';
+  const W = 560, PAD = 30;
+  const usable = W - PAD * 2;
+  const s = currentState();
+  const marks = s.marks || [];
+
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1', PAD); line.setAttribute('x2', PAD + usable);
+  line.setAttribute('y1', 80); line.setAttribute('y2', 80);
+  line.setAttribute('stroke','var(--color-border-primary)'); line.setAttribute('stroke-width','2');
+  svg.appendChild(line);
+
+  for (let i = 0; i <= TOTAL; i++) {
+    const x = PAD + (i / TOTAL) * usable;
+    const tick = document.createElementNS('http://www.w3.org/2000/svg','line');
+    tick.setAttribute('x1', x); tick.setAttribute('x2', x);
+    tick.setAttribute('y1', 80); tick.setAttribute('y2', 90);
+    tick.setAttribute('stroke','var(--color-border-secondary)'); tick.setAttribute('stroke-width','1');
+    svg.appendChild(tick);
+    if (i % 4 === 0) {
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+      lbl.setAttribute('x', x); lbl.setAttribute('y', 104);
+      lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('font-size','11');
+      lbl.setAttribute('fill','var(--color-text-tertiary)'); lbl.setAttribute('font-family','var(--font-mono)');
+      lbl.textContent = i;
+      svg.appendChild(lbl);
+    }
+  }
+
+  marks.forEach(mk => {
+    const x = PAD + (mk.pos / TOTAL) * usable;
+    const hgt = mk.h * 12;
+    const bar = document.createElementNS('http://www.w3.org/2000/svg','line');
+    bar.setAttribute('x1', x); bar.setAttribute('x2', x);
+    bar.setAttribute('y1', 80 - hgt); bar.setAttribute('y2', 80);
+    bar.setAttribute('stroke','#D85A30'); bar.setAttribute('stroke-width','2.5');
+    bar.setAttribute('stroke-linecap','round');
+    svg.appendChild(bar);
+
+    const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx', x); dot.setAttribute('cy', 80 - hgt);
+    dot.setAttribute('r','3'); dot.setAttribute('fill','#D85A30');
+    svg.appendChild(dot);
+
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x', x + 5); lbl.setAttribute('y', 80 - hgt + 4);
+    lbl.setAttribute('font-size','10'); lbl.setAttribute('fill','#993C1D');
+    lbl.setAttribute('font-family','var(--font-mono)');
+    lbl.textContent = mk.h;
+    svg.appendChild(lbl);
+  });
+
+  if (s.type === 'mark' || s.type === 'enter') {
+    const seg = document.createElementNS('http://www.w3.org/2000/svg','line');
+    const x1 = PAD + (s.l / TOTAL) * usable;
+    const x2 = PAD + (s.r / TOTAL) * usable;
+    seg.setAttribute('x1', x1); seg.setAttribute('x2', x2);
+    seg.setAttribute('y1', 68); seg.setAttribute('y2', 68);
+    seg.setAttribute('stroke','#1D9E75'); seg.setAttribute('stroke-width','2');
+    seg.setAttribute('stroke-dasharray','4 3'); seg.setAttribute('opacity','0.7');
+    svg.appendChild(seg);
+  }
+}
+
+function drawTree() {
+  const svg = document.getElementById('tree-svg');
+  svg.innerHTML = '';
+  const { nodes, edges } = TREE;
+  const { active, done, returning, cur } = activeNodeIds();
+
+  edges.forEach(e => {
+    const fromVisible = nodes[e.from] && (active.has(e.from) || done.has(e.from) || returning.has(e.from));
+    const toVisible   = nodes[e.to]   && (active.has(e.to)   || done.has(e.to)   || returning.has(e.to));
+    if (!fromVisible && !toVisible) return;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', e.x1); line.setAttribute('y1', e.y1);
+    line.setAttribute('x2', e.x2); line.setAttribute('y2', e.y2);
+    line.setAttribute('stroke','var(--color-border-secondary)'); line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+  });
+
+  Object.entries(nodes).forEach(([id, nd]) => {
+    const isActive   = active.has(id);
+    const isDone     = done.has(id);
+    const isReturn   = returning.has(id);
+    const isCurrent  = id === cur;
+    if (!isActive && !isDone && !isReturn) return;
+
+    let fill = 'var(--color-background-primary)';
+    let stroke = 'var(--color-border-secondary)';
+    let txtColor = 'var(--color-text-secondary)';
+
+    if (isCurrent)    { fill = '#E1F5EE'; stroke = '#1D9E75'; txtColor = '#085041'; }
+    else if (isReturn){ fill = '#FAEEDA'; stroke = '#EF9F27'; txtColor = '#633806'; }
+    else if (isDone)  { fill = '#EEEDFE'; stroke = '#534AB7'; txtColor = '#3C3489'; }
+
+    const short = nd.h <= 0
+      ? `regua(${nd.l},${nd.r},0)`
+      : `regua(${nd.l},${nd.r},${nd.h})`;
+
+    const W = nd.h === H ? 96 : nd.h === 0 ? 68 : 80;
+    const H2 = 22;
+    const rx = nd.x, ry = nd.y;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', rx - W/2); rect.setAttribute('y', ry - H2/2);
+    rect.setAttribute('width', W); rect.setAttribute('height', H2);
+    rect.setAttribute('rx','4'); rect.setAttribute('fill', fill);
+    rect.setAttribute('stroke', stroke); rect.setAttribute('stroke-width','1');
+    svg.appendChild(rect);
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x', rx); txt.setAttribute('y', ry + 4);
+    txt.setAttribute('text-anchor','middle'); txt.setAttribute('font-size', nd.h === H ? '11' : '9');
+    txt.setAttribute('font-family','var(--font-mono)'); txt.setAttribute('fill', txtColor);
+    txt.textContent = short;
+    svg.appendChild(txt);
+  });
+}
+
+function logMessage(s) {
+  const depth = H - s.h;
+  const indent = '  '.repeat(Math.max(0, depth));
+  if (s.type === 'enter' && s.h > 0)
+    return `${indent}→ regua(${s.l}, ${s.r}, ${s.h})  —  m = ${(s.l+s.r)>>1}`;
+  if (s.type === 'mark')
+    return `${indent}   marca(${s.m}, h=${s.h})  ✓  régua atualizada`;
+  if (s.type === 'back_left')
+    return `${indent}   lado esquerdo concluído — iniciando lado direito`;
+  if (s.type === 'done')
+    return `${indent}← regua(${s.l}, ${s.r}, ${s.h})  retornou`;
+  if (s.type === 'base')
+    return `${indent}   h = 0  →  caso base, retorna sem fazer nada`;
+  return '';
+}
+
+function render() {
+  drawRuler();
+  drawTree();
+  const s = currentState();
+  document.getElementById('log-box').textContent = logMessage(s);
+  document.getElementById('step-counter').textContent =
+    `passo ${stepIdx + 1} / ${STEPS.length}`;
+  document.getElementById('btn-prev').disabled = stepIdx === 0;
+  document.getElementById('btn-next').disabled = stepIdx >= STEPS.length - 1;
+}
+
+function go(dir) {
+  stepIdx = Math.max(0, Math.min(STEPS.length - 1, stepIdx + dir));
+  render();
+}
+
+function reset() {
+  clearInterval(autoTimer); autoTimer = null;
+  document.getElementById('btn-auto').textContent = '▷ Auto';
+  stepIdx = 0;
+  render();
+}
+
+function toggleAuto() {
+  if (autoTimer) {
+    clearInterval(autoTimer); autoTimer = null;
+    document.getElementById('btn-auto').textContent = '▷ Auto';
+  } else {
+    document.getElementById('btn-auto').textContent = '‖ Pausar';
+    function tick() {
+      if (stepIdx >= STEPS.length - 1) {
+        clearInterval(autoTimer); autoTimer = null;
+        document.getElementById('btn-auto').textContent = '▷ Auto';
+        return;
+      }
+      go(1);
+      const spd = parseInt(document.getElementById('speed').value);
+      const delay = [800,600,400,250,120][spd-1];
+      autoTimer = setTimeout(tick, delay);
+    }
+    tick();
+  }
+}
+
+render();
+</script>
