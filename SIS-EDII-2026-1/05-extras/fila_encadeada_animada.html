@@ -1,0 +1,173 @@
+
+<style>
+  @keyframes slideIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(-60px); } }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(59,139,212,0.4)} 50%{box-shadow:0 0 0 6px rgba(59,139,212,0)} }
+  .no-card { animation: slideIn 0.35s ease; }
+  .no-card.removing { animation: slideOut 0.35s ease forwards; }
+</style>
+
+<div style="padding:1rem 0">
+
+  <div style="display:flex; gap:8px; margin-bottom:1.5rem; align-items:center; flex-wrap:wrap;">
+    <input id="inp" type="text" placeholder="Nome ou valor..." style="flex:1; min-width:120px;" onkeydown="if(event.key==='Enter')enfileirar()">
+    <button onclick="enfileirar()">Enfileirar ↓</button>
+    <button onclick="desenfileirar()">Desenfileirar ←</button>
+    <button onclick="resetar()" style="color:var(--color-text-secondary)">Limpar</button>
+  </div>
+
+  <div id="log" style="font-size:12px; color:var(--color-text-secondary); min-height:18px; margin-bottom:1rem;"></div>
+
+  <div style="position:relative; min-height:140px;">
+
+    <div style="display:flex; align-items:center; gap:0; overflow-x:auto; padding-bottom:8px;" id="fila-wrapper">
+
+      <div id="primeiro-label" style="display:none; flex-direction:column; align-items:center; margin-right:4px;">
+        <span style="font-size:11px; color:var(--color-text-info); font-weight:500;">primeiro</span>
+        <span style="font-size:18px; color:var(--color-text-info); line-height:1;">↓</span>
+      </div>
+
+      <div id="nos" style="display:flex; align-items:center; gap:0; flex:1;"></div>
+
+      <div id="ultimo-label" style="display:none; flex-direction:column; align-items:center; margin-left:4px;">
+        <span style="font-size:18px; color:var(--color-text-success); line-height:1;">↓</span>
+        <span style="font-size:11px; color:var(--color-text-success); font-weight:500;">último</span>
+      </div>
+
+    </div>
+
+    <div id="vazia-msg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);font-size:13px;">
+      Fila vazia — adicione elementos
+    </div>
+
+  </div>
+
+  <div style="border-top:0.5px solid var(--color-border-tertiary); margin-top:1.5rem; padding-top:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:.75rem; text-align:center;">
+      <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:4px;">tamanho</div>
+      <div id="stat-tam" style="font-size:22px; font-weight:500;">0</div>
+    </div>
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:.75rem; text-align:center;">
+      <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:4px;">enfileirados</div>
+      <div id="stat-enf" style="font-size:22px; font-weight:500;">0</div>
+    </div>
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:.75rem; text-align:center;">
+      <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:4px;">desenfileirados</div>
+      <div id="stat-des" style="font-size:22px; font-weight:500;">0</div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.5rem; background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:.75rem 1rem;">
+    <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:8px; font-weight:500;">Carregar exemplo</div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <button onclick="carregar(['Ana','Carlos','Beatriz','Diego'])" style="font-size:12px; padding:4px 10px;">Nomes</button>
+      <button onclick="carregar([10,30,20,40,15])" style="font-size:12px; padding:4px 10px;">Inteiros</button>
+      <button onclick="carregar(['el01','el02','el03'])" style="font-size:12px; padding:4px 10px;">el01 / el02 / el03</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let fila = [];
+let contEnf = 0, contDes = 0;
+
+const nosEl = document.getElementById('nos');
+const vaziaMsgEl = document.getElementById('vazia-msg');
+const primEl = document.getElementById('primeiro-label');
+const ultEl = document.getElementById('ultimo-label');
+const logEl = document.getElementById('log');
+
+function log(msg, cor) {
+  logEl.style.color = cor || 'var(--color-text-secondary)';
+  logEl.textContent = msg;
+}
+
+function atualizar() {
+  document.getElementById('stat-tam').textContent = fila.length;
+  document.getElementById('stat-enf').textContent = contEnf;
+  document.getElementById('stat-des').textContent = contDes;
+
+  const vazia = fila.length === 0;
+  vaziaMsgEl.style.display = vazia ? 'flex' : 'none';
+  primEl.style.display = vazia ? 'none' : 'flex';
+  ultEl.style.display = vazia ? 'none' : 'flex';
+
+  nosEl.innerHTML = '';
+  fila.forEach((dado, i) => {
+    const card = document.createElement('div');
+    card.className = 'no-card';
+    card.style.cssText = `
+      display:flex; align-items:center; animation-delay:${i*0.04}s;
+    `;
+
+    const box = document.createElement('div');
+    box.style.cssText = `
+      background:var(--color-background-primary);
+      border:0.5px solid var(--color-border-secondary);
+      border-radius:var(--border-radius-md);
+      padding:10px 14px;
+      min-width:64px;
+      text-align:center;
+      ${i===0 ? 'border-color:var(--color-border-info); animation: pulse 1.5s ease-in-out 1;' : ''}
+      ${i===fila.length-1 && fila.length>1 ? 'border-color:var(--color-border-success);' : ''}
+    `;
+
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:13px; font-weight:500; color:var(--color-text-primary);';
+    label.textContent = dado;
+
+    const noLabel = document.createElement('div');
+    noLabel.style.cssText = 'font-size:10px; color:var(--color-text-secondary); margin-top:3px;';
+    noLabel.textContent = 'Nó';
+
+    box.appendChild(label);
+    box.appendChild(noLabel);
+    card.appendChild(box);
+
+    if (i < fila.length - 1) {
+      const arr = document.createElement('div');
+      arr.style.cssText = 'font-size:16px; color:var(--color-text-secondary); padding:0 2px; user-select:none;';
+      arr.textContent = '→';
+      card.appendChild(arr);
+    }
+
+    nosEl.appendChild(card);
+  });
+}
+
+function enfileirar() {
+  const inp = document.getElementById('inp');
+  const val = inp.value.trim();
+  if (!val) { log('Digite um valor para enfileirar.'); return; }
+  fila.push(val);
+  contEnf++;
+  inp.value = '';
+  log(`"${val}" enfileirado no fim.`, 'var(--color-text-success)');
+  atualizar();
+}
+
+function desenfileirar() {
+  if (fila.length === 0) { log('Fila vazia — nada para desenfileirar.', 'var(--color-text-danger)'); return; }
+  const saiu = fila.shift();
+  contDes++;
+  log(`"${saiu}" desenfileirado do início.`, 'var(--color-text-info)');
+  atualizar();
+}
+
+function resetar() {
+  fila = [];
+  log('Fila limpa.');
+  atualizar();
+}
+
+function carregar(valores) {
+  fila = [];
+  contEnf = 0; contDes = 0;
+  valores.forEach(v => { fila.push(String(v)); contEnf++; });
+  log(`${valores.length} elementos carregados.`, 'var(--color-text-success)');
+  atualizar();
+}
+
+atualizar();
+</script>
