@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafos em Java — Estruturas de Dados II</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --azul-fundo:    #06152E;
+    --azul-petroleo: #0D2B45;
+    --azul-medio:    #3E5C76;
+    --areia:         #F3F1EC;
+    --azul-luminoso: #5B8CFF;
+    --texto:         #1A1A2E;
+    --texto-suave:   #4A5568;
+    --borda:         #E2E0DB;
+    --code-fundo:    #0D2B45;
+    --code-texto:    #E8F4F8;
+    --verde-code:    #7DD3A8;
+    --amarelo-code:  #F6C90E;
+    --roxo-code:     #C9A0DC;
+    --laranja-code:  #FFA76D;
+    --branco:        #FFFFFF;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--branco);
+    color: var(--texto);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--azul-fundo);
+    color: var(--branco);
+    padding: 56px 24px 48px;
+    text-align: center;
+  }
+
+  .header-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--azul-luminoso);
+    margin-bottom: 16px;
+  }
+
+  header h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  header p {
+    font-size: 17px;
+    color: #A8B8CC;
+    max-width: 560px;
+    margin: 0 auto 32px;
+  }
+
+  .progress-bar-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: #7A8FA0;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--azul-luminoso);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* STEPS NAV */
+  .steps-nav {
+    background: var(--areia);
+    border-bottom: 1px solid var(--borda);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .steps-nav-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .steps-nav-inner::-webkit-scrollbar { display: none; }
+
+  .step-tab {
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--texto-suave);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .step-tab:hover { color: var(--azul-petroleo); }
+  .step-tab.active {
+    color: var(--azul-petroleo);
+    border-bottom-color: var(--azul-luminoso);
+    font-weight: 600;
+  }
+
+  /* SECTIONS */
+  .section {
+    display: none;
+    padding: 56px 0;
+  }
+
+  .section.visible { display: block; }
+
+  .section-number {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--azul-luminoso);
+    margin-bottom: 8px;
+  }
+
+  .section h2 {
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 700;
+    color: var(--azul-fundo);
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+
+  .section p {
+    color: var(--texto-suave);
+    margin-bottom: 16px;
+    font-size: 15.5px;
+    max-width: 680px;
+  }
+
+  .section p strong {
+    color: var(--texto);
+    font-weight: 600;
+  }
+
+  /* PROBLEM BOX */
+  .problem-box {
+    background: var(--areia);
+    border: 1px solid var(--borda);
+    border-left: 4px solid var(--azul-luminoso);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin: 28px 0;
+  }
+
+  .problem-box h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--azul-petroleo);
+    margin-bottom: 12px;
+  }
+
+  .problem-box p {
+    margin-bottom: 10px;
+    font-size: 15px;
+  }
+
+  .problem-box ul {
+    margin: 10px 0 0 18px;
+    color: var(--texto-suave);
+    font-size: 15px;
+  }
+
+  .problem-box ul li { margin-bottom: 6px; }
+
+  /* TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+
+  .data-table th {
+    background: var(--azul-petroleo);
+    color: var(--branco);
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .data-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--borda);
+    color: var(--texto-suave);
+  }
+
+  .data-table tr:nth-child(even) td { background: var(--areia); }
+
+  /* CONCEPT CARDS */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 28px 0;
+  }
+
+  .concept-card {
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    padding: 20px;
+  }
+
+  .concept-card .icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .concept-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--azul-fundo);
+    margin-bottom: 6px;
+  }
+
+  .concept-card p {
+    font-size: 13.5px;
+    color: var(--texto-suave);
+    margin: 0;
+  }
+
+  /* CODE BLOCK */
+  .code-wrap {
+    margin: 28px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(6,21,46,0.12);
+  }
+
+  .code-header {
+    background: #07192D;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .code-dots { display: flex; gap: 6px; }
+  .code-dots span {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .dot-r { background: #FF5F57; }
+  .dot-y { background: #FEBC2E; }
+  .dot-g { background: #28C840; }
+
+  .code-filename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #7A8FA0;
+  }
+
+  pre {
+    background: var(--code-fundo);
+    padding: 24px;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--code-texto);
+  }
+
+  .kw  { color: var(--azul-luminoso); font-weight: 500; }
+  .cm  { color: #5A7A8A; font-style: italic; }
+  .str { color: var(--verde-code); }
+  .num { color: var(--amarelo-code); }
+  .tp  { color: var(--roxo-code); }
+  .fn  { color: var(--laranja-code); }
+  .hl  { background: rgba(91,140,255,0.15); display: inline-block; width: 100%; border-left: 3px solid var(--azul-luminoso); padding-left: 4px; margin-left: -4px; }
+
+  /* ANNOTATION */
+  .annotation {
+    background: #EEF4FF;
+    border: 1px solid #C5D8FF;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 14.5px;
+    color: #2A4080;
+  }
+
+  .annotation strong { font-weight: 700; }
+
+  /* DIAGRAM */
+  .diagram-wrap {
+    background: var(--areia);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    padding: 32px;
+    margin: 28px 0;
+    text-align: center;
+  }
+
+  .diagram-wrap svg { max-width: 100%; }
+
+  /* MATRIX */
+  .matrix-table {
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin: 0 auto;
+  }
+
+  .matrix-table th, .matrix-table td {
+    padding: 8px 12px;
+    border: 1px solid var(--borda);
+    text-align: center;
+  }
+
+  .matrix-table th {
+    background: var(--azul-petroleo);
+    color: var(--branco);
+    font-size: 11px;
+  }
+
+  .matrix-table td { color: var(--texto-suave); }
+  .matrix-table td.nonzero { color: var(--azul-petroleo); font-weight: 700; }
+  .matrix-table td.diag { background: #f0f0f0; color: #aaa; }
+
+  /* NAVIGATION BUTTONS */
+  .nav-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--borda);
+  }
+
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--azul-luminoso);
+    color: var(--branco);
+  }
+
+  .btn-primary:hover { background: #4A7BEF; }
+  .btn-primary:disabled { background: #C5D8FF; cursor: default; }
+
+  .btn-ghost {
+    background: none;
+    color: var(--texto-suave);
+    border: 1px solid var(--borda);
+  }
+
+  .btn-ghost:hover { background: var(--areia); color: var(--texto); }
+  .btn-ghost:disabled { opacity: 0.3; cursor: default; }
+
+  .nav-step-info {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--texto-suave);
+  }
+
+  /* FINAL CODE FULL */
+  .final-note {
+    background: var(--azul-fundo);
+    color: var(--branco);
+    border-radius: 8px;
+    padding: 28px;
+    margin: 28px 0;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .final-note h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--azul-luminoso);
+  }
+
+  .final-note ul {
+    margin-left: 20px;
+    color: #A8B8CC;
+    font-size: 14px;
+  }
+
+  .final-note ul li { margin-bottom: 6px; }
+
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(91,140,255,0.15);
+    border: 1px solid rgba(91,140,255,0.3);
+    color: var(--azul-luminoso);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: background 0.15s;
+  }
+
+  .copy-btn:hover { background: rgba(91,140,255,0.25); }
+
+  @media (max-width: 600px) {
+    .concept-grid { grid-template-columns: 1fr; }
+    .nav-actions { flex-wrap: wrap; }
+    .nav-step-info { margin-left: 0; width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">Estruturas de Dados II — Grafos</div>
+  <h1>Representando um Grafo em Java</h1>
+  <p>Acompanhe a construção do programa passo a passo, do problema ao código completo.</p>
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span id="progress-text">Etapa 1 de 6</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+</header>
+
+<nav class="steps-nav">
+  <div class="steps-nav-inner">
+    <button class="step-tab active" onclick="goTo(0)">1. O Problema</button>
+    <button class="step-tab" onclick="goTo(1)">2. Conceitos</button>
+    <button class="step-tab" onclick="goTo(2)">3. A Aresta</button>
+    <button class="step-tab" onclick="goTo(3)">4. O Grafo</button>
+    <button class="step-tab" onclick="goTo(4)">5. As Representações</button>
+    <button class="step-tab" onclick="goTo(5)">6. Código Completo</button>
+  </div>
+</nav>
+
+<!-- ===== ETAPA 1: O PROBLEMA ===== -->
+<div class="section visible" id="section-0">
+  <div class="container">
+    <div class="section-number">Etapa 1 de 6</div>
+    <h2>O problema a ser resolvido</h2>
+    <p>Antes de escrever qualquer código, precisamos entender o que queremos modelar. Todo programa começa com um problema real.</p>
+
+    <div class="problem-box">
+      <h3>Enunciado</h3>
+      <p>Uma empresa de logística precisa mapear a malha rodoviária entre cidades de Minas Gerais. Cada cidade é um ponto de distribuição. Cada estrada conecta duas cidades e tem uma distância em quilômetros.</p>
+      <p>O sistema deve:</p>
+      <ul>
+        <li>Armazenar a malha nas duas formas clássicas: <strong>matriz de adjacências</strong> e <strong>lista de adjacências</strong>.</li>
+        <li>Exibir as duas representações para o mesmo conjunto de dados.</li>
+        <li>Informar o <strong>grau</strong> de cada cidade, ou seja, quantas estradas partem dela diretamente.</li>
+      </ul>
+    </div>
+
+    <p>Os dados de entrada estão fixos no programa. São cinco cidades e cinco estradas:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>Estrada</th><th>Distância</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Uberlândia → Uberaba</td><td>120 km</td></tr>
+        <tr><td>Uberlândia → Ituiutaba</td><td>130 km</td></tr>
+        <tr><td>Uberaba → Araxá</td><td>80 km</td></tr>
+        <tr><td>Araxá → Patos de Minas</td><td>95 km</td></tr>
+        <tr><td>Patos de Minas → Ituiutaba</td><td>200 km</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Duas observações importantes</strong> que vão guiar o projeto do código:</p>
+    <p>As estradas não têm sentido obrigatório. Se existe estrada de A para B, existe também de B para A. O grafo é <strong>não-direcionado</strong>. Na matriz, isso vai gerar uma estrutura simétrica.</p>
+    <p>As distâncias são relevantes. O grafo é <strong>ponderado</strong>: cada aresta carrega um valor numérico associado.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg" style="max-width:480px">
+        <!-- arestas -->
+        <line x1="120" y1="140" x2="240" y2="60" stroke="#3E5C76" stroke-width="2"/>
+        <line x1="120" y1="140" x2="120" y2="240" stroke="#3E5C76" stroke-width="2"/>
+        <line x1="240" y1="60" x2="360" y2="60" stroke="#3E5C76" stroke-width="2"/>
+        <line x1="360" y1="60" x2="360" y2="220" stroke="#3E5C76" stroke-width="2"/>
+        <line x1="120" y1="240" x2="360" y2="220" stroke="#3E5C76" stroke-width="2"/>
+        <!-- pesos -->
+        <text x="168" y="88" font-family="JetBrains Mono" font-size="11" fill="#5B8CFF">120km</text>
+        <text x="58" y="198" font-family="JetBrains Mono" font-size="11" fill="#5B8CFF">130km</text>
+        <text x="290" y="50" font-family="JetBrains Mono" font-size="11" fill="#5B8CFF">80km</text>
+        <text x="368" y="148" font-family="JetBrains Mono" font-size="11" fill="#5B8CFF">95km</text>
+        <text x="208" y="248" font-family="JetBrains Mono" font-size="11" fill="#5B8CFF">200km</text>
+        <!-- vértices -->
+        <circle cx="120" cy="140" r="28" fill="#0D2B45" stroke="#5B8CFF" stroke-width="2"/>
+        <circle cx="240" cy="60" r="28" fill="#0D2B45" stroke="#3E5C76" stroke-width="1.5"/>
+        <circle cx="360" cy="60" r="28" fill="#0D2B45" stroke="#3E5C76" stroke-width="1.5"/>
+        <circle cx="120" cy="240" r="28" fill="#0D2B45" stroke="#3E5C76" stroke-width="1.5"/>
+        <circle cx="360" cy="220" r="28" fill="#0D2B45" stroke="#3E5C76" stroke-width="1.5"/>
+        <!-- rótulos -->
+        <text x="120" y="135" text-anchor="middle" font-family="Inter" font-size="10" fill="white" font-weight="600">Uber</text>
+        <text x="120" y="148" text-anchor="middle" font-family="Inter" font-size="10" fill="white" font-weight="600">lândia</text>
+        <text x="240" y="55" text-anchor="middle" font-family="Inter" font-size="10" fill="white" font-weight="600">Uber</text>
+        <text x="240" y="68" text-anchor="middle" font-family="Inter" font-size="10" fill="white" font-weight="600">aba</text>
+        <text x="360" y="55" text-anchor="middle" font-family="Inter" font-size="10" fill="white" font-weight="600">Ara</text>
+        <text x="360" y="68" text-anchor="middle" font-family="Inter" font-size="10" fill="white" font-weight="600">xá</text>
+        <text x="120" y="235" text-anchor="middle" font-family="Inter" font-size="9" fill="white" font-weight="600">Ituiu</text>
+        <text x="120" y="248" text-anchor="middle" font-family="Inter" font-size="9" fill="white" font-weight="600">taba</text>
+        <text x="360" y="215" text-anchor="middle" font-family="Inter" font-size="9" fill="white" font-weight="600">Patos</text>
+        <text x="360" y="228" text-anchor="middle" font-family="Inter" font-size="9" fill="white" font-weight="600">de MG</text>
+      </svg>
+      <p style="font-size:13px;color:#888;margin-top:12px;">Representação visual do grafo: 5 vértices, 5 arestas, ponderado e não-direcionado.</p>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-ghost" disabled>Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(1)">Próximo: Conceitos →</button>
+      <span class="nav-step-info">Etapa 1 de 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ETAPA 2: CONCEITOS ===== -->
+<div class="section" id="section-1">
+  <div class="container">
+    <div class="section-number">Etapa 2 de 6</div>
+    <h2>Conceitos fundamentais que o código vai expressar</h2>
+    <p>Antes de escrever as classes, vale mapear o que cada conceito do problema se tornará no código.</p>
+
+    <div class="concept-grid">
+      <div class="concept-card">
+        <div class="icon">◉</div>
+        <h4>Vértice</h4>
+        <p>Cada cidade. No código, representado por um índice inteiro (0 a 4) e um nome em um array de Strings.</p>
+      </div>
+      <div class="concept-card">
+        <div class="icon">—</div>
+        <h4>Aresta</h4>
+        <p>Cada estrada. Tem um destino (índice da cidade) e um peso (distância em km). Vira uma classe Java.</p>
+      </div>
+      <div class="concept-card">
+        <div class="icon">↔</div>
+        <h4>Não-direcionado</h4>
+        <p>Ao inserir uma estrada de A para B, o código também insere de B para A. Sempre nos dois sentidos.</p>
+      </div>
+      <div class="concept-card">
+        <div class="icon">#</div>
+        <h4>Ponderado</h4>
+        <p>Cada aresta carrega um valor numérico. Na matriz, o valor da célula é o peso, não apenas 0 ou 1.</p>
+      </div>
+      <div class="concept-card">
+        <div class="icon">▦</div>
+        <h4>Matriz de adjacências</h4>
+        <p>Grade n×n onde a célula [i][j] guarda a distância entre as cidades i e j. Zero significa sem conexão.</p>
+      </div>
+      <div class="concept-card">
+        <div class="icon">≡</div>
+        <h4>Lista de adjacências</h4>
+        <p>Cada cidade tem uma lista com suas vizinhas diretas. Mais eficiente em memória para grafos pouco densos.</p>
+      </div>
+    </div>
+
+    <p>O grafo deste problema tem <strong>n = 5 vértices</strong> e <strong>m = 5 arestas</strong>. A matriz vai ocupar sempre n² = 25 posições. A lista vai ocupar n + 2m = 15 posições (cada aresta aparece duas vezes por ser não-direcionada). Para grafos maiores e pouco densos, a lista é mais econômica.</p>
+
+    <div class="annotation">
+      <strong>Observação sobre simetria.</strong> Em um grafo não-direcionado, a matriz de adjacências é sempre simétrica: o valor em [i][j] é igual ao valor em [j][i]. Isso vai aparecer claramente na saída do programa.
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-ghost" onclick="goTo(0)">← Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Próximo: A Aresta →</button>
+      <span class="nav-step-info">Etapa 2 de 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ETAPA 3: CLASSE ARESTA ===== -->
+<div class="section" id="section-2">
+  <div class="container">
+    <div class="section-number">Etapa 3 de 6</div>
+    <h2>Primeira parte do código: a classe Aresta</h2>
+    <p>O programa tem duas classes. Começamos pela menor: <strong>Aresta</strong>. Ela representa uma única conexão entre duas cidades.</p>
+
+    <p>Uma aresta precisa guardar duas informações: para qual cidade ela aponta e qual é a distância. Nada mais.</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-filename">RedeRodoviaria.java</span>
+      </div>
+      <pre><code><span class="kw">import</span> java.util.ArrayList;
+
+<span class="kw">public class</span> <span class="tp">RedeRodoviaria</span> {
+
+    <span class="hl"><span class="cm">    // Representa uma única estrada: para onde vai e qual é a distância</span>
+    <span class="kw">    static class</span> <span class="tp">Aresta</span> {
+        <span class="kw">int</span> destino;
+        <span class="kw">int</span> distanciaKm;
+
+        <span class="fn">        Aresta</span>(<span class="kw">int</span> destino, <span class="kw">int</span> distanciaKm) {
+            <span class="kw">this</span>.destino = destino;
+            <span class="kw">this</span>.distanciaKm = distanciaKm;
+        }
+    }</span>
+
+    <span class="cm">    // ... a classe Grafo vem a seguir</span>
+
+}</code></pre>
+    </div>
+
+    <div class="annotation">
+      <strong>Por que uma classe separada?</strong> Poderíamos guardar só o índice do destino e usar a matriz para os pesos. Mas criar a classe <code>Aresta</code> deixa o código mais legível e facilita adicionar novos atributos depois, como tempo de percurso ou capacidade da via.
+    </div>
+
+    <p>Repare que a classe é declarada como <code>static</code> porque está dentro de outra classe (<code>RedeRodoviaria</code>). Isso significa que ela não depende de uma instância da classe externa para existir.</p>
+
+    <p>O construtor recebe os dois valores e os atribui diretamente. Não há lógica adicional aqui: a aresta apenas armazena dados.</p>
+
+    <div class="nav-actions">
+      <button class="btn btn-ghost" onclick="goTo(1)">← Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Próximo: O Grafo →</button>
+      <span class="nav-step-info">Etapa 3 de 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ETAPA 4: CLASSE GRAFO ===== -->
+<div class="section" id="section-3">
+  <div class="container">
+    <div class="section-number">Etapa 4 de 6</div>
+    <h2>Segunda parte: a classe Grafo</h2>
+    <p>A classe <strong>Grafo</strong> guarda as duas representações ao mesmo tempo e oferece métodos para inserir estradas. Veja sua estrutura:</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-filename">RedeRodoviaria.java</span>
+      </div>
+      <pre><code>    <span class="kw">static class</span> <span class="tp">Grafo</span> {
+        <span class="kw">int</span> n;
+        <span class="tp">String</span>[] nomes;
+
+        <span class="hl">        <span class="cm">// Representação 1: matriz n×n com as distâncias</span>
+        <span class="kw">        int</span>[][] matriz;</span>
+
+        <span class="hl">        <span class="cm">// Representação 2: para cada vértice, uma lista de vizinhos</span>
+        <span class="tp">        ArrayList</span>&lt;<span class="tp">ArrayList</span>&lt;<span class="tp">Aresta</span>&gt;&gt; lista;</span>
+
+        <span class="fn">        Grafo</span>(<span class="tp">String</span>[] nomes) {
+            <span class="kw">this</span>.n = nomes.length;
+            <span class="kw">this</span>.nomes = nomes;
+
+            <span class="cm">            // Aloca a matriz n×n (Java já a preenche com zeros)</span>
+            matriz = <span class="kw">new int</span>[n][n];
+
+            <span class="cm">            // Aloca a lista: uma ArrayList para cada vértice</span>
+            lista = <span class="kw">new</span> <span class="tp">ArrayList</span>&lt;&gt;();
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+                lista.<span class="fn">add</span>(<span class="kw">new</span> <span class="tp">ArrayList</span>&lt;&gt;());
+            }
+        }
+
+        <span class="cm">        // ... métodos a seguir</span>
+    }</code></pre>
+    </div>
+
+    <div class="annotation">
+      <strong>Por que ArrayList&lt;ArrayList&lt;Aresta&gt;&gt;?</strong> É a forma de criar uma lista de listas em Java sem a necessidade de definir um tamanho máximo fixo. Cada posição da lista externa corresponde a um vértice e contém outra lista com todas as arestas que partem dele.
+    </div>
+
+    <p>Agora o método que insere uma estrada. Ele atualiza as <strong>duas representações ao mesmo tempo</strong>:</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-filename">RedeRodoviaria.java</span>
+      </div>
+      <pre><code>        <span class="kw">void</span> <span class="fn">adicionarEstrada</span>(<span class="kw">int</span> a, <span class="kw">int</span> b, <span class="kw">int</span> km) {
+
+            <span class="hl">            <span class="cm">// Matriz: dois lados, porque o grafo é não-direcionado</span>
+            matriz[a][b] = km;
+            matriz[b][a] = km;</span>
+
+            <span class="hl">            <span class="cm">// Lista: aresta inserida nas duas direções também</span>
+            lista.<span class="fn">get</span>(a).<span class="fn">add</span>(<span class="kw">new</span> <span class="tp">Aresta</span>(b, km));
+            lista.<span class="fn">get</span>(b).<span class="fn">add</span>(<span class="kw">new</span> <span class="tp">Aresta</span>(a, km));</span>
+        }</code></pre>
+    </div>
+
+    <p>A linha <code>matriz[a][b] = km</code> registra a distância da cidade a para a cidade b. A linha seguinte, <code>matriz[b][a] = km</code>, faz o mesmo no sentido contrário. É isso que torna a matriz simétrica. O mesmo princípio se aplica à lista.</p>
+
+    <div class="nav-actions">
+      <button class="btn btn-ghost" onclick="goTo(2)">← Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Próximo: As Representações →</button>
+      <span class="nav-step-info">Etapa 4 de 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ETAPA 5: REPRESENTAÇÕES ===== -->
+<div class="section" id="section-4">
+  <div class="container">
+    <div class="section-number">Etapa 5 de 6</div>
+    <h2>Métodos de exibição e o main</h2>
+    <p>Com as estruturas prontas, os métodos de exibição percorrem e imprimem o que foi armazenado. Cada um ilustra uma propriedade diferente das representações.</p>
+
+    <p><strong>Imprimindo a matriz:</strong></p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-filename">RedeRodoviaria.java</span>
+      </div>
+      <pre><code>        <span class="kw">void</span> <span class="fn">imprimirMatriz</span>() {
+            <span class="tp">System</span>.out.<span class="fn">println</span>(<span class="str">"=== Matriz de adjacências (km) ==="</span>);
+            <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20s"</span>, <span class="str">""</span>);
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+                <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20s"</span>, nomes[i]);
+            <span class="tp">System</span>.out.<span class="fn">println</span>();
+
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+                <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20s"</span>, nomes[i]);
+                <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n; j++)
+                    <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20d"</span>, matriz[i][j]);
+                <span class="tp">System</span>.out.<span class="fn">println</span>();
+            }
+        }</code></pre>
+    </div>
+
+    <p>O resultado visual da matriz para os nossos dados. Note a diagonal de zeros e a simetria:</p>
+
+    <div class="diagram-wrap">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Uberlândia</th>
+            <th>Uberaba</th>
+            <th>Araxá</th>
+            <th>Patos</th>
+            <th>Ituiutaba</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Uberlândia</th>
+            <td class="diag">0</td>
+            <td class="nonzero">120</td>
+            <td>0</td>
+            <td>0</td>
+            <td class="nonzero">130</td>
+          </tr>
+          <tr>
+            <th>Uberaba</th>
+            <td class="nonzero">120</td>
+            <td class="diag">0</td>
+            <td class="nonzero">80</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <th>Araxá</th>
+            <td>0</td>
+            <td class="nonzero">80</td>
+            <td class="diag">0</td>
+            <td class="nonzero">95</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <th>Patos</th>
+            <td>0</td>
+            <td>0</td>
+            <td class="nonzero">95</td>
+            <td class="diag">0</td>
+            <td class="nonzero">200</td>
+          </tr>
+          <tr>
+            <th>Ituiutaba</th>
+            <td class="nonzero">130</td>
+            <td>0</td>
+            <td>0</td>
+            <td class="nonzero">200</td>
+            <td class="diag">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p><strong>Imprimindo a lista e o grau:</strong></p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-filename">RedeRodoviaria.java</span>
+      </div>
+      <pre><code>        <span class="kw">void</span> <span class="fn">imprimirLista</span>() {
+            <span class="tp">System</span>.out.<span class="fn">println</span>(<span class="str">"\n=== Lista de adjacências ==="</span>);
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+                <span class="tp">System</span>.out.<span class="fn">print</span>(nomes[i] + <span class="str">":"</span>);
+                <span class="kw">for</span> (<span class="tp">Aresta</span> a : lista.<span class="fn">get</span>(i))
+                    <span class="tp">System</span>.out.<span class="fn">print</span>(<span class="str">" -> "</span> + nomes[a.destino] + <span class="str">" ("</span> + a.distanciaKm + <span class="str">" km)"</span>);
+                <span class="tp">System</span>.out.<span class="fn">println</span>();
+            }
+        }
+
+        <span class="kw">void</span> <span class="fn">mostrarGrau</span>() {
+            <span class="tp">System</span>.out.<span class="fn">println</span>(<span class="str">"\n=== Grau de cada vértice ==="</span>);
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+                <span class="tp">System</span>.out.<span class="fn">println</span>(nomes[i] + <span class="str">": grau "</span> + lista.<span class="fn">get</span>(i).<span class="fn">size</span>());
+        }</code></pre>
+    </div>
+
+    <div class="annotation">
+      <strong>Grau via lista.</strong> O grau de um vértice é simplesmente o tamanho da sua lista de adjacências: <code>lista.get(i).size()</code>. Cada estrada inserida adicionou uma Aresta nessa lista, nos dois sentidos. Por isso todas as cidades têm grau 2 neste exemplo: o grafo foi construído como uma cadeia linear.
+    </div>
+
+    <p>Por fim, o <strong>main</strong> cria o grafo, insere as estradas e chama os três métodos:</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-filename">RedeRodoviaria.java</span>
+      </div>
+      <pre><code>    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="tp">String</span>[] args) {
+        <span class="tp">String</span>[] cidades = {<span class="str">"Uberlândia"</span>, <span class="str">"Uberaba"</span>, <span class="str">"Araxá"</span>, <span class="str">"Patos de Minas"</span>, <span class="str">"Ituiutaba"</span>};
+
+        <span class="tp">Grafo</span> g = <span class="kw">new</span> <span class="tp">Grafo</span>(cidades);
+
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">0</span>, <span class="num">1</span>, <span class="num">120</span>);  <span class="cm">// Uberlândia - Uberaba</span>
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">0</span>, <span class="num">4</span>, <span class="num">130</span>);  <span class="cm">// Uberlândia - Ituiutaba</span>
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">80</span>);   <span class="cm">// Uberaba - Araxá</span>
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">95</span>);   <span class="cm">// Araxá - Patos de Minas</span>
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">3</span>, <span class="num">4</span>, <span class="num">200</span>);  <span class="cm">// Patos de Minas - Ituiutaba</span>
+
+        g.<span class="fn">imprimirMatriz</span>();
+        g.<span class="fn">imprimirLista</span>();
+        g.<span class="fn">mostrarGrau</span>();
+    }</code></pre>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-ghost" onclick="goTo(3)">← Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(5)">Próximo: Código Completo →</button>
+      <span class="nav-step-info">Etapa 5 de 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ETAPA 6: CÓDIGO COMPLETO ===== -->
+<div class="section" id="section-5">
+  <div class="container">
+    <div class="section-number">Etapa 6 de 6</div>
+    <h2>Código completo</h2>
+    <p>Todas as partes reunidas em um único arquivo. Pronto para compilar e executar.</p>
+
+    <div class="final-note">
+      <h3>O que este programa demonstra</h3>
+      <ul>
+        <li>Modelagem de um grafo ponderado e não-direcionado</li>
+        <li>Representação por <strong>matriz de adjacências</strong>: custo de memória O(n²), simétrica, acesso direto a qualquer par de vértices</li>
+        <li>Representação por <strong>lista de adjacências</strong>: custo de memória O(n + m), mais eficiente para grafos pouco densos</li>
+        <li>Grau de um vértice obtido diretamente pelo tamanho da sua lista</li>
+        <li>As duas representações mantidas sincronizadas a cada inserção</li>
+      </ul>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="code-filename">RedeRodoviaria.java</span>
+      </div>
+      <pre><code id="full-code"><span class="kw">import</span> java.util.ArrayList;
+
+<span class="kw">public class</span> <span class="tp">RedeRodoviaria</span> {
+
+    <span class="cm">    // Representa uma única estrada: para onde vai e qual é a distância</span>
+    <span class="kw">    static class</span> <span class="tp">Aresta</span> {
+        <span class="kw">int</span> destino;
+        <span class="kw">int</span> distanciaKm;
+
+        <span class="fn">        Aresta</span>(<span class="kw">int</span> destino, <span class="kw">int</span> distanciaKm) {
+            <span class="kw">this</span>.destino = destino;
+            <span class="kw">this</span>.distanciaKm = distanciaKm;
+        }
+    }
+
+    <span class="cm">    // Grafo ponderado não-direcionado com duas representações simultâneas</span>
+    <span class="kw">    static class</span> <span class="tp">Grafo</span> {
+        <span class="kw">int</span> n;
+        <span class="tp">String</span>[] nomes;
+        <span class="kw">int</span>[][] matriz;
+        <span class="tp">ArrayList</span>&lt;<span class="tp">ArrayList</span>&lt;<span class="tp">Aresta</span>&gt;&gt; lista;
+
+        <span class="fn">        Grafo</span>(<span class="tp">String</span>[] nomes) {
+            <span class="kw">this</span>.n = nomes.length;
+            <span class="kw">this</span>.nomes = nomes;
+            matriz = <span class="kw">new int</span>[n][n];
+            lista = <span class="kw">new</span> <span class="tp">ArrayList</span>&lt;&gt;();
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+                lista.<span class="fn">add</span>(<span class="kw">new</span> <span class="tp">ArrayList</span>&lt;&gt;());
+        }
+
+        <span class="cm">        // Insere a estrada nos dois sentidos (grafo não-direcionado)</span>
+        <span class="kw">        void</span> <span class="fn">adicionarEstrada</span>(<span class="kw">int</span> a, <span class="kw">int</span> b, <span class="kw">int</span> km) {
+            matriz[a][b] = km;
+            matriz[b][a] = km;
+            lista.<span class="fn">get</span>(a).<span class="fn">add</span>(<span class="kw">new</span> <span class="tp">Aresta</span>(b, km));
+            lista.<span class="fn">get</span>(b).<span class="fn">add</span>(<span class="kw">new</span> <span class="tp">Aresta</span>(a, km));
+        }
+
+        <span class="kw">        void</span> <span class="fn">imprimirMatriz</span>() {
+            <span class="tp">System</span>.out.<span class="fn">println</span>(<span class="str">"=== Matriz de adjacências (km) ==="</span>);
+            <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20s"</span>, <span class="str">""</span>);
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+                <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20s"</span>, nomes[i]);
+            <span class="tp">System</span>.out.<span class="fn">println</span>();
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+                <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20s"</span>, nomes[i]);
+                <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n; j++)
+                    <span class="tp">System</span>.out.<span class="fn">printf</span>(<span class="str">"%20d"</span>, matriz[i][j]);
+                <span class="tp">System</span>.out.<span class="fn">println</span>();
+            }
+        }
+
+        <span class="kw">        void</span> <span class="fn">imprimirLista</span>() {
+            <span class="tp">System</span>.out.<span class="fn">println</span>(<span class="str">"\n=== Lista de adjacências ==="</span>);
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+                <span class="tp">System</span>.out.<span class="fn">print</span>(nomes[i] + <span class="str">":"</span>);
+                <span class="kw">for</span> (<span class="tp">Aresta</span> a : lista.<span class="fn">get</span>(i))
+                    <span class="tp">System</span>.out.<span class="fn">print</span>(<span class="str">" -> "</span> + nomes[a.destino] + <span class="str">" ("</span> + a.distanciaKm + <span class="str">" km)"</span>);
+                <span class="tp">System</span>.out.<span class="fn">println</span>();
+            }
+        }
+
+        <span class="kw">        void</span> <span class="fn">mostrarGrau</span>() {
+            <span class="tp">System</span>.out.<span class="fn">println</span>(<span class="str">"\n=== Grau de cada vértice ==="</span>);
+            <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+                <span class="tp">System</span>.out.<span class="fn">println</span>(nomes[i] + <span class="str">": grau "</span> + lista.<span class="fn">get</span>(i).<span class="fn">size</span>());
+        }
+    }
+
+    <span class="kw">    public static void</span> <span class="fn">main</span>(<span class="tp">String</span>[] args) {
+        <span class="tp">String</span>[] cidades = {
+            <span class="str">"Uberlândia"</span>, <span class="str">"Uberaba"</span>, <span class="str">"Araxá"</span>, <span class="str">"Patos de Minas"</span>, <span class="str">"Ituiutaba"</span>
+        };
+
+        <span class="tp">Grafo</span> g = <span class="kw">new</span> <span class="tp">Grafo</span>(cidades);
+
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">0</span>, <span class="num">1</span>, <span class="num">120</span>);
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">0</span>, <span class="num">4</span>, <span class="num">130</span>);
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">80</span>);
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">95</span>);
+        g.<span class="fn">adicionarEstrada</span>(<span class="num">3</span>, <span class="num">4</span>, <span class="num">200</span>);
+
+        g.<span class="fn">imprimirMatriz</span>();
+        g.<span class="fn">imprimirLista</span>();
+        g.<span class="fn">mostrarGrau</span>();
+    }
+}</code></pre>
+    </div>
+
+    <button class="copy-btn" onclick="copiarCodigo()">
+      <span id="copy-label">Copiar código</span>
+    </button>
+
+    <div class="nav-actions">
+      <button class="btn btn-ghost" onclick="goTo(4)">← Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(0)">Recomeçar do início</button>
+      <span class="nav-step-info">Etapa 6 de 6</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOTAL = 6;
+  let current = 0;
+
+  function goTo(idx) {
+    document.getElementById('section-' + current).classList.remove('visible');
+    document.querySelectorAll('.step-tab')[current].classList.remove('active');
+
+    current = idx;
+
+    document.getElementById('section-' + current).classList.add('visible');
+    document.querySelectorAll('.step-tab')[current].classList.add('active');
+
+    const pct = Math.round((current / (TOTAL - 1)) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = 'Etapa ' + (current + 1) + ' de ' + TOTAL;
+    document.getElementById('progress-pct').textContent = pct + '%';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function copiarCodigo() {
+    const raw = `import java.util.ArrayList;
+
+public class RedeRodoviaria {
+
+    // Representa uma única estrada: para onde vai e qual é a distância
+    static class Aresta {
+        int destino;
+        int distanciaKm;
+
+        Aresta(int destino, int distanciaKm) {
+            this.destino = destino;
+            this.distanciaKm = distanciaKm;
+        }
+    }
+
+    // Grafo ponderado não-direcionado com duas representações simultâneas
+    static class Grafo {
+        int n;
+        String[] nomes;
+        int[][] matriz;
+        ArrayList<ArrayList<Aresta>> lista;
+
+        Grafo(String[] nomes) {
+            this.n = nomes.length;
+            this.nomes = nomes;
+            matriz = new int[n][n];
+            lista = new ArrayList<>();
+            for (int i = 0; i < n; i++)
+                lista.add(new ArrayList<>());
+        }
+
+        // Insere a estrada nos dois sentidos (grafo não-direcionado)
+        void adicionarEstrada(int a, int b, int km) {
+            matriz[a][b] = km;
+            matriz[b][a] = km;
+            lista.get(a).add(new Aresta(b, km));
+            lista.get(b).add(new Aresta(a, km));
+        }
+
+        void imprimirMatriz() {
+            System.out.println("=== Matriz de adjacências (km) ===");
+            System.out.printf("%20s", "");
+            for (int i = 0; i < n; i++)
+                System.out.printf("%20s", nomes[i]);
+            System.out.println();
+            for (int i = 0; i < n; i++) {
+                System.out.printf("%20s", nomes[i]);
+                for (int j = 0; j < n; j++)
+                    System.out.printf("%20d", matriz[i][j]);
+                System.out.println();
+            }
+        }
+
+        void imprimirLista() {
+            System.out.println("\\n=== Lista de adjacências ===");
+            for (int i = 0; i < n; i++) {
+                System.out.print(nomes[i] + ":");
+                for (Aresta a : lista.get(i))
+                    System.out.print(" -> " + nomes[a.destino] + " (" + a.distanciaKm + " km)");
+                System.out.println();
+            }
+        }
+
+        void mostrarGrau() {
+            System.out.println("\\n=== Grau de cada vértice ===");
+            for (int i = 0; i < n; i++)
+                System.out.println(nomes[i] + ": grau " + lista.get(i).size());
+        }
+    }
+
+    public static void main(String[] args) {
+        String[] cidades = {
+            "Uberlândia", "Uberaba", "Araxá", "Patos de Minas", "Ituiutaba"
+        };
+
+        Grafo g = new Grafo(cidades);
+
+        g.adicionarEstrada(0, 1, 120);
+        g.adicionarEstrada(0, 4, 130);
+        g.adicionarEstrada(1, 2, 80);
+        g.adicionarEstrada(2, 3, 95);
+        g.adicionarEstrada(3, 4, 200);
+
+        g.imprimirMatriz();
+        g.imprimirLista();
+        g.mostrarGrau();
+    }
+}`;
+
+    navigator.clipboard.writeText(raw).then(() => {
+      const label = document.getElementById('copy-label');
+      label.textContent = 'Copiado!';
+      setTimeout(() => { label.textContent = 'Copiar código'; }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

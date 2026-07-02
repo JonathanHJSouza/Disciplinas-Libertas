@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exercícios de Grafos</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --mono: 'Courier New', monospace;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1rem 4rem;
+    line-height: 1.6;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+
+  header { margin-bottom: 2.5rem; }
+  header h1 { font-size: 28px; font-weight: 600; margin-bottom: .4rem; }
+  header p { font-size: 15px; color: var(--text-2); }
+
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--text-3);
+    margin: 2.5rem 0 1rem;
+    padding-left: 2px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+    margin-bottom: 1rem;
+  }
+  .card-header-left { flex: 1; }
+  .q-title { font-size: 16px; font-weight: 600; margin-bottom: .3rem; }
+  .q-desc { font-size: 14px; color: var(--text-2); line-height: 1.65; }
+
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 4px 12px;
+    border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+  }
+  .easy   { background: #dcfce7; color: #166534; }
+  .medium { background: #fef9c3; color: #854d0e; }
+  .hard   { background: #fee2e2; color: #991b1b; }
+  .adv    { background: #ede9fe; color: #4c1d95; }
+
+  .svg-wrap { text-align: center; margin: 1.25rem 0; }
+  svg { max-width: 100%; height: auto; }
+  svg text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  .reveal-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    margin-top: .25rem;
+  }
+  .reveal-btn:hover { background: var(--bg); border-color: #94a3b8; }
+  .reveal-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .answer {
+    display: none;
+    margin-top: 1.25rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    line-height: 1.75;
+  }
+  .answer.open { display: block; }
+  .answer strong { font-weight: 600; }
+
+  .path {
+    font-family: var(--mono);
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 12.5px;
+    color: #1e40af;
+  }
+
+  .tip {
+    margin-top: 1rem;
+    font-size: 13px;
+    color: var(--text-3);
+    font-style: italic;
+    border-top: 1px solid var(--border);
+    padding-top: .75rem;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: .75rem 0; }
+
+  .answer br + br { content: ''; display: block; margin-top: .4rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Exercícios de Grafos</h1>
+    <p>Do mais fácil ao mais difícil — menor caminho, grafos ponderados e restrições.<br>
+    Analise o grafo, resolva mentalmente ou no papel, depois clique em <strong>Revelar resposta</strong>.</p>
+  </header>
+
+  <!-- ── NÍVEL 1 ── -->
+  <div class="section-label">Nível 1 — Conceitos básicos</div>
+
+  <!-- E1 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E1 — Existe caminho?</div>
+        <div class="q-desc">Dado o grafo abaixo (não-direcionado, sem pesos), existe caminho de <strong>A</strong> até <strong>E</strong>? Se sim, liste todos os caminhos simples possíveis.</div>
+      </div>
+      <span class="badge easy">Fácil</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="360" height="200" viewBox="0 0 360 200">
+        <line x1="60" y1="100" x2="150" y2="50"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="60" y1="100" x2="150" y2="150" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="150" y1="50"  x2="240" y2="50"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="150" y1="150" x2="240" y2="150" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="240" y1="50"  x2="310" y2="100" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="240" y1="150" x2="310" y2="100" stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- nós -->
+        <circle cx="60"  cy="100" r="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="150" cy="50"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="150" cy="150" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="240" cy="50"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="240" cy="150" r="22" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <circle cx="310" cy="100" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="60"  y="106" text-anchor="middle" font-size="15" font-weight="600" fill="#1d4ed8">A</text>
+        <text x="150" y="56"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">B</text>
+        <text x="150" y="156" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">C</text>
+        <text x="240" y="56"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">D</text>
+        <text x="240" y="156" text-anchor="middle" font-size="15" font-weight="600" fill="#166534">E</text>
+        <text x="310" y="106" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">F</text>
+        <text x="60"  y="132" text-anchor="middle" font-size="11" fill="#94a3b8">origem</text>
+        <text x="240" y="182" text-anchor="middle" font-size="11" fill="#94a3b8">destino</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>Sim, existem dois caminhos simples de A até E:</strong><br><br>
+      <span class="path">A → C → E</span> &nbsp;(2 arestas)<br><br>
+      <span class="path">A → B → D → F → E</span> — F conecta com E? Sim, F tem aresta para E e para D.<br><br>
+      <strong>Caminhos simples de A até E:</strong><br>
+      1. <span class="path">A → C → E</span><br>
+      2. <span class="path">A → B → D → F → E</span><br>
+      3. <span class="path">A → C → F → E</span> — não existe aresta C–F direta. ✗<br><br>
+      Verificando as conexões: F liga a D e a E (via as duas arestas que chegam em F). Então:<br>
+      ✅ <span class="path">A → C → E</span><br>
+      ✅ <span class="path">A → B → D → F → E</span> — sim, pois F–E existe<br>
+      <div class="tip">Dica: antes de qualquer conta, liste os vizinhos de cada vértice. Evita erros de percurso.</div>
+    </div>
+  </div>
+
+  <!-- E2 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E2 — Menor caminho sem pesos</div>
+        <div class="q-desc">Grafo não-direcionado. Qual o menor caminho em <strong>número de arestas</strong> de <strong>1</strong> até <strong>6</strong>? Existem mais de um?</div>
+      </div>
+      <span class="badge easy">Fácil</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="380" height="210" viewBox="0 0 380 210">
+        <line x1="50"  y1="105" x2="140" y2="45"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="50"  y1="105" x2="140" y2="165" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="140" y1="45"  x2="240" y2="45"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="140" y1="165" x2="240" y2="165" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="240" y1="45"  x2="330" y2="105" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="240" y1="165" x2="330" y2="105" stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- arestas extras tracejadas -->
+        <line x1="140" y1="45"  x2="140" y2="165" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <line x1="240" y1="45"  x2="240" y2="165" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <circle cx="50"  cy="105" r="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="140" cy="45"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="140" cy="165" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="240" cy="45"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="240" cy="165" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="330" cy="105" r="22" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <text x="50"  y="111" text-anchor="middle" font-size="15" font-weight="600" fill="#1d4ed8">1</text>
+        <text x="140" y="51"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">2</text>
+        <text x="140" y="171" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">3</text>
+        <text x="240" y="51"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">4</text>
+        <text x="240" y="171" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">5</text>
+        <text x="330" y="111" text-anchor="middle" font-size="15" font-weight="600" fill="#166534">6</text>
+        <text x="190" y="18"  text-anchor="middle" font-size="11" fill="#94a3b8">tracejadas = arestas extras</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>Menor caminho: 3 arestas. Existem dois caminhos com esse comprimento:</strong><br><br>
+      ✅ <span class="path">1 → 2 → 4 → 6</span><br>
+      ✅ <span class="path">1 → 3 → 5 → 6</span><br><br>
+      As arestas tracejadas (2–3 e 4–5) criam atalhos entre as faixas, mas qualquer caminho que as use termina com 4 arestas — por exemplo <span class="path">1 → 2 → 3 → 5 → 6</span>.<br><br>
+      <strong>Não existe caminho de 2 arestas</strong>, pois nenhum vizinho direto de 1 (que são 2 e 3) conecta diretamente ao 6.
+      <div class="tip">Sem pesos, "menor" = menos arestas. O BFS (busca em largura) garante encontrar esse caminho.</div>
+    </div>
+  </div>
+
+  <!-- ── NÍVEL 2 ── -->
+  <div class="section-label">Nível 2 — Grafos ponderados</div>
+
+  <!-- E3 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E3 — Menor custo (Dijkstra manual)</div>
+        <div class="q-desc">Grafo ponderado não-direcionado. Encontre o caminho de <strong>menor custo total</strong> de <strong>A</strong> até <strong>F</strong>. Os números nas arestas são os pesos.</div>
+      </div>
+      <span class="badge medium">Médio</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="400" height="230" viewBox="0 0 400 230">
+        <line x1="55"  y1="115" x2="155" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="55"  y1="115" x2="155" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="155" y1="55"  x2="255" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="155" y1="175" x2="255" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="155" y1="55"  x2="255" y2="175" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="255" y1="55"  x2="330" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="255" y1="175" x2="330" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- pesos -->
+        <text x="95"  y="72"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">4</text>
+        <text x="95"  y="162" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">2</text>
+        <text x="205" y="42"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">3</text>
+        <text x="205" y="196" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">6</text>
+        <text x="218" y="108" text-anchor="middle" font-size="12" fill="#94a3b8">9</text>
+        <text x="303" y="73"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">1</text>
+        <text x="303" y="160" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">5</text>
+        <!-- nós -->
+        <circle cx="55"  cy="115" r="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="155" cy="55"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="155" cy="175" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="255" cy="55"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="255" cy="175" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="330" cy="115" r="22" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <text x="55"  y="121" text-anchor="middle" font-size="15" font-weight="600" fill="#1d4ed8">A</text>
+        <text x="155" y="61"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">B</text>
+        <text x="155" y="181" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">C</text>
+        <text x="255" y="61"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">D</text>
+        <text x="255" y="181" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">E</text>
+        <text x="330" y="121" text-anchor="middle" font-size="15" font-weight="600" fill="#166534">F</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>Calculando todos os caminhos de A até F:</strong><br><br>
+      <span class="path">A → B → D → F</span>: 4 + 3 + 1 = <strong>8</strong><br>
+      <span class="path">A → C → E → F</span>: 2 + 6 + 5 = <strong>13</strong><br>
+      <span class="path">A → B → E → F</span>: 4 + 9 + 5 = <strong>18</strong> (usa aresta tracejada)<br><br>
+      <strong>✅ Menor caminho: A → B → D → F com custo total = 8</strong><br><br>
+      <strong>Passo a passo (lógica Dijkstra):</strong><br>
+      • A: vizinhos B(4) e C(2). Menor custo = C(2). Visita C.<br>
+      • De C: chega a E com custo 2+6 = 8.<br>
+      • Volta a B(4): de B vai a D(4+3=7) e ao atalho para E(4+9=13).<br>
+      • De D(7): chega a F com 7+1 = <strong>8</strong>.<br>
+      • De E(8): chega a F com 8+5 = 13.<br>
+      • Menor distância até F = 8, pelo caminho B–D.
+      <div class="tip">Dijkstra sempre expande o vértice não-visitado com menor custo acumulado — por isso encontra o ótimo global.</div>
+    </div>
+  </div>
+
+  <!-- E4 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E4 — Dígrafo ponderado</div>
+        <div class="q-desc">As arestas agora têm <strong>direção</strong> (veja as setas). Encontre o menor caminho de <strong>1</strong> até <strong>5</strong>. Atenção: nem todo caminho do grafo não-direcionado ainda existe.</div>
+      </div>
+      <span class="badge medium">Médio</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="400" height="210" viewBox="0 0 400 210">
+        <defs>
+          <marker id="arr" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto">
+            <path d="M0,0 L0,7 L9,3.5 z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+        <line x1="65"  y1="105" x2="145" y2="52"  stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr)"/>
+        <line x1="65"  y1="105" x2="145" y2="158" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr)"/>
+        <line x1="162" y1="52"  x2="238" y2="52"  stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr)"/>
+        <line x1="162" y1="158" x2="238" y2="105" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr)"/>
+        <line x1="255" y1="57"  x2="315" y2="96"  stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr)"/>
+        <line x1="255" y1="105" x2="315" y2="105" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr)"/>
+        <!-- atalho tracejado -->
+        <line x1="162" y1="55"  x2="238" y2="153" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arr)"/>
+        <!-- pesos -->
+        <text x="98"  y="64"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">5</text>
+        <text x="98"  y="152" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">3</text>
+        <text x="200" y="39"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">2</text>
+        <text x="195" y="148" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">4</text>
+        <text x="292" y="66"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">1</text>
+        <text x="292" y="96"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">6</text>
+        <text x="218" y="100" text-anchor="middle" font-size="12" fill="#94a3b8">8</text>
+        <!-- nós -->
+        <circle cx="52"  cy="105" r="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="155" cy="52"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="155" cy="158" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="250" cy="52"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="250" cy="105" r="22" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <circle cx="330" cy="105" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="52"  y="111" text-anchor="middle" font-size="15" font-weight="600" fill="#1d4ed8">1</text>
+        <text x="155" y="58"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">2</text>
+        <text x="155" y="164" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">3</text>
+        <text x="250" y="58"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">4</text>
+        <text x="250" y="111" text-anchor="middle" font-size="15" font-weight="600" fill="#166534">5</text>
+        <text x="330" y="111" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">6</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>Destino = nó 5 (não o nó 6). Seguindo as direções:</strong><br><br>
+      1 aponta para: 2 (custo 5) e 3 (custo 3).<br>
+      2 aponta para: 4 (custo 2) e 5 via atalho (custo 8).<br>
+      3 aponta para: 5 (custo 4).<br>
+      4 aponta para: 5 (custo 1) e 6 (custo 6).<br><br>
+      <strong>Caminhos de 1 até 5:</strong><br>
+      <span class="path">1 → 3 → 5</span>: 3 + 4 = <strong>7</strong> ✅<br>
+      <span class="path">1 → 2 → 4 → 5</span>: 5 + 2 + 1 = <strong>8</strong> ✅<br>
+      <span class="path">1 → 2 → 5</span> (atalho): 5 + 8 = <strong>13</strong> ✅<br><br>
+      <strong>✅ Menor caminho: 1 → 3 → 5, custo = 7</strong><br><br>
+      O nó 6 é alcançável (via 1→2→4→6 = 5+2+6=13), mas não é o destino pedido.
+      <div class="tip">Em dígrafos, sempre verifique a direção da seta antes de usar uma aresta. Sentido errado = caminho inválido.</div>
+    </div>
+  </div>
+
+  <!-- ── NÍVEL 3 ── -->
+  <div class="section-label">Nível 3 — Com restrições</div>
+
+  <!-- E5 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E5 — Vértice proibido</div>
+        <div class="q-desc">Encontre o menor caminho de <strong>S</strong> até <strong>T</strong>, mas o <strong>vértice C está bloqueado</strong> e não pode ser visitado. Como o custo muda?</div>
+      </div>
+      <span class="badge medium">Médio</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="420" height="230" viewBox="0 0 420 230">
+        <line x1="55"  y1="115" x2="145" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="55"  y1="115" x2="145" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="55"  y1="115" x2="145" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="145" y1="55"  x2="255" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- arestas de C tracejadas (bloqueadas) -->
+        <line x1="145" y1="115" x2="255" y2="55"  stroke="#fca5a5" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="145" y1="115" x2="255" y2="175" stroke="#fca5a5" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="145" y1="175" x2="255" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="255" y1="55"  x2="355" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="255" y1="175" x2="355" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- pesos -->
+        <text x="92"  y="72"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">2</text>
+        <text x="92"  y="110" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">1</text>
+        <text x="92"  y="158" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">3</text>
+        <text x="200" y="40"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">4</text>
+        <text x="193" y="78"  text-anchor="middle" font-size="12" fill="#fca5a5">✗ 2</text>
+        <text x="193" y="152" text-anchor="middle" font-size="12" fill="#fca5a5">✗ 1</text>
+        <text x="200" y="195" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">5</text>
+        <text x="316" y="75"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">3</text>
+        <text x="316" y="160" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">2</text>
+        <!-- nós -->
+        <circle cx="55"  cy="115" r="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="145" cy="55"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="145" cy="115" r="22" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,3"/>
+        <circle cx="145" cy="175" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="255" cy="55"  r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="255" cy="175" r="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="355" cy="115" r="22" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <text x="55"  y="121" text-anchor="middle" font-size="15" font-weight="600" fill="#1d4ed8">S</text>
+        <text x="145" y="61"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">A</text>
+        <text x="145" y="121" text-anchor="middle" font-size="13" font-weight="600" fill="#991b1b">C ✗</text>
+        <text x="145" y="181" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">B</text>
+        <text x="255" y="61"  text-anchor="middle" font-size="15" font-weight="600" fill="#475569">D</text>
+        <text x="255" y="181" text-anchor="middle" font-size="15" font-weight="600" fill="#475569">E</text>
+        <text x="355" y="121" text-anchor="middle" font-size="15" font-weight="600" fill="#166534">T</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>Removemos C e todas as suas arestas (tracejadas em vermelho).</strong><br><br>
+      Caminhos disponíveis sem C:<br>
+      <span class="path">S → A → D → T</span>: 2 + 4 + 3 = <strong>9</strong> ✅<br>
+      <span class="path">S → B → E → T</span>: 3 + 5 + 2 = <strong>10</strong> ✅<br><br>
+      <strong>✅ Menor caminho sem C: S → A → D → T, custo = 9</strong><br><br>
+      <strong>Comparação com e sem restrição:</strong><br>
+      Sem restrição, o ótimo seria <span class="path">S → C → E → T</span>: 1+1+2 = <strong>4</strong>.<br>
+      Com C bloqueado, o custo sobe para <strong>9</strong> — mais do que o dobro.
+      <div class="tip">Restrições de vértice são comuns: estradas interditadas, servidores fora do ar, zonas proibidas em mapas.</div>
+    </div>
+  </div>
+
+  <!-- E6 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E6 — Aresta proibida</div>
+        <div class="q-desc">A aresta <strong>B–D está bloqueada</strong> (em manutenção). Encontre o menor caminho de <strong>A</strong> até <strong>G</strong> sem usá-la. Compare com o custo sem restrição.</div>
+      </div>
+      <span class="badge hard">Difícil</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="440" height="220" viewBox="0 0 440 220">
+        <line x1="42"  y1="110" x2="122" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="42"  y1="110" x2="122" y2="165" stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- B-D bloqueada -->
+        <line x1="122" y1="55"  x2="212" y2="55"  stroke="#ef4444" stroke-width="2" stroke-dasharray="7,4"/>
+        <line x1="122" y1="165" x2="212" y2="165" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="122" y1="55"  x2="212" y2="165" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="212" y1="55"  x2="312" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="212" y1="165" x2="312" y2="165" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="212" y1="55"  x2="312" y2="165" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="312" y1="55"  x2="392" y2="110" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="312" y1="165" x2="392" y2="110" stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- pesos -->
+        <text x="75"  y="70"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">3</text>
+        <text x="75"  y="153" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">5</text>
+        <text x="167" y="40"  text-anchor="middle" font-size="12" fill="#ef4444" font-weight="600">✗ 2</text>
+        <text x="167" y="183" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">4</text>
+        <text x="178" y="118" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">6</text>
+        <text x="262" y="40"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">1</text>
+        <text x="262" y="183" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">3</text>
+        <text x="276" y="123" text-anchor="middle" font-size="12" fill="#94a3b8">7</text>
+        <text x="360" y="70"  text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">2</text>
+        <text x="360" y="155" text-anchor="middle" font-size="13" font-weight="500" fill="#64748b">4</text>
+        <!-- nós -->
+        <circle cx="42"  cy="110" r="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="122" cy="55"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="122" cy="165" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="212" cy="55"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="212" cy="165" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="312" cy="55"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="312" cy="165" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="392" cy="110" r="20" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <text x="42"  y="116" text-anchor="middle" font-size="14" font-weight="600" fill="#1d4ed8">A</text>
+        <text x="122" y="61"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">B</text>
+        <text x="122" y="171" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">C</text>
+        <text x="212" y="61"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">D</text>
+        <text x="212" y="171" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">E</text>
+        <text x="312" y="61"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">F</text>
+        <text x="312" y="171" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">H</text>
+        <text x="392" y="116" text-anchor="middle" font-size="14" font-weight="600" fill="#166534">G</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>A aresta B–D (custo 2) está bloqueada. Removemos ela.</strong><br><br>
+      Caminhos válidos de A até G sem B–D:<br>
+      <span class="path">A → B → E → F → G</span>: 3 + 6 + 1 + 2 = <strong>12</strong> ✅<br>
+      <span class="path">A → C → E → F → G</span>: 5 + 4 + 1 + 2 = <strong>12</strong> ✅<br>
+      <span class="path">A → B → E → H → G</span>: 3 + 6 + 3 + 4 = <strong>16</strong><br>
+      <span class="path">A → C → E → H → G</span>: 5 + 4 + 3 + 4 = <strong>16</strong><br><br>
+      <strong>✅ Dois caminhos empatados com custo 12:</strong><br>
+      <span class="path">A → B → E → F → G</span><br>
+      <span class="path">A → C → E → F → G</span><br><br>
+      <strong>Sem restrição:</strong> <span class="path">A → B → D → F → G</span>: 3+2+1+2 = <strong>8</strong>.<br>
+      A restrição força o desvio pelo nó E, elevando o custo mínimo de 8 para 12.
+      <div class="tip">Restrição de aresta: basta removê-la do grafo e rodar Dijkstra normalmente no grafo modificado.</div>
+    </div>
+  </div>
+
+  <!-- ── NÍVEL 4 ── -->
+  <div class="section-label">Nível 4 — Desafios</div>
+
+  <!-- E7 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E7 — Múltiplas restrições</div>
+        <div class="q-desc">Dígrafo ponderado. Resolva em três cenários:<br>
+        <strong>(a)</strong> Sem restrições &nbsp;·&nbsp;
+        <strong>(b)</strong> Nó 3 bloqueado &nbsp;·&nbsp;
+        <strong>(c)</strong> Nó 4 bloqueado <em>e</em> aresta 2→5 bloqueada.<br>
+        Encontre o menor caminho de <strong>1</strong> até <strong>8</strong> em cada caso.</div>
+      </div>
+      <span class="badge hard">Difícil</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="460" height="240" viewBox="0 0 460 240">
+        <defs>
+          <marker id="arr2" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto">
+            <path d="M0,0 L0,7 L9,3.5 z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+        <line x1="42"  y1="120" x2="122" y2="62"  stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="42"  y1="120" x2="122" y2="178" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="140" y1="62"  x2="218" y2="62"  stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="140" y1="178" x2="218" y2="68"  stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="140" y1="178" x2="218" y2="178" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="236" y1="62"  x2="318" y2="62"  stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="236" y1="62"  x2="318" y2="178" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="236" y1="178" x2="318" y2="178" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="336" y1="62"  x2="415" y2="120" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="336" y1="178" x2="415" y2="120" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <!-- pesos -->
+        <text x="75"  y="76"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">4</text>
+        <text x="75"  y="165" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">2</text>
+        <text x="179" y="48"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">3</text>
+        <text x="165" y="108" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">7</text>
+        <text x="179" y="194" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">1</text>
+        <text x="277" y="48"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">2</text>
+        <text x="282" y="134" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">5</text>
+        <text x="277" y="194" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">3</text>
+        <text x="383" y="76"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">1</text>
+        <text x="383" y="165" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">4</text>
+        <!-- nós -->
+        <circle cx="30"  cy="120" r="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="132" cy="62"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="132" cy="178" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="227" cy="62"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="227" cy="178" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="327" cy="62"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="327" cy="178" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="427" cy="120" r="20" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <text x="30"  y="126" text-anchor="middle" font-size="14" font-weight="600" fill="#1d4ed8">1</text>
+        <text x="132" y="68"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">2</text>
+        <text x="132" y="184" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">3</text>
+        <text x="227" y="68"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">4</text>
+        <text x="227" y="184" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">5</text>
+        <text x="327" y="68"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">6</text>
+        <text x="327" y="184" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">7</text>
+        <text x="427" y="126" text-anchor="middle" font-size="14" font-weight="600" fill="#166534">8</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>(a) Sem restrições — caminhos de 1 até 8:</strong><br>
+      <span class="path">1→2→4→6→8</span>: 4+3+2+1 = <strong>10</strong><br>
+      <span class="path">1→3→5→7→8</span>: 2+1+3+4 = <strong>10</strong><br>
+      <span class="path">1→3→4→6→8</span>: 2+7+2+1 = <strong>12</strong><br>
+      <span class="path">1→2→4→7→8</span>: 4+3+5+4 = <strong>16</strong><br>
+      ✅ <strong>Empate: custo 10 por dois caminhos distintos.</strong>
+      <div class="divider"></div>
+      <strong>(b) Nó 3 bloqueado:</strong><br>
+      Remove 3 e suas arestas. O caminho via 3 some.<br>
+      <span class="path">1→2→4→6→8</span>: 4+3+2+1 = <strong>10</strong> ✅<br>
+      <span class="path">1→2→4→7→8</span>: 4+3+5+4 = 16<br>
+      ✅ <strong>Melhor: 1→2→4→6→8, custo 10.</strong>
+      <div class="divider"></div>
+      <strong>(c) Nó 4 bloqueado + aresta 2→5 bloqueada:</strong><br>
+      Sem nó 4: o nó 2 perde seu único destino (4). A aresta 2→5 também está bloqueada.<br>
+      O nó 2 fica sem saída útil para o destino.<br>
+      O nó 3 continua disponível: <span class="path">1→3→5→7→8</span>: 2+1+3+4 = <strong>10</strong> ✅<br>
+      ✅ <strong>Único caminho viável: 1→3→5→7→8, custo 10.</strong>
+      <div class="tip">Restrições combinadas podem isolar partes inteiras do grafo. Sempre verifique se o destino ainda é alcançável!</div>
+    </div>
+  </div>
+
+  <!-- E8 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="q-title">E8 — Os 3 menores caminhos distintos</div>
+        <div class="q-desc">Grafo ponderado não-direcionado. Liste os <strong>3 menores caminhos distintos</strong> de <strong>S</strong> até <strong>T</strong> em ordem crescente de custo. Dois caminhos são distintos se usam conjuntos de arestas diferentes.</div>
+      </div>
+      <span class="badge adv">Avançado</span>
+    </div>
+    <div class="svg-wrap">
+      <svg width="440" height="230" viewBox="0 0 440 230">
+        <line x1="42"  y1="115" x2="122" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="42"  y1="115" x2="122" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="42"  y1="115" x2="122" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="122" y1="55"  x2="222" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="122" y1="115" x2="222" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="122" y1="115" x2="222" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="122" y1="175" x2="222" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="222" y1="55"  x2="322" y2="55"  stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="222" y1="175" x2="322" y2="175" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="222" y1="55"  x2="322" y2="175" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="322" y1="55"  x2="402" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <line x1="322" y1="175" x2="402" y2="115" stroke="#94a3b8" stroke-width="1.8"/>
+        <!-- pesos -->
+        <text x="75"  y="68"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">1</text>
+        <text x="75"  y="110" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">3</text>
+        <text x="75"  y="158" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">4</text>
+        <text x="172" y="40"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">2</text>
+        <text x="162" y="76"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">5</text>
+        <text x="162" y="152" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">1</text>
+        <text x="172" y="193" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">2</text>
+        <text x="272" y="40"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">3</text>
+        <text x="272" y="193" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">1</text>
+        <text x="283" y="128" text-anchor="middle" font-size="12" fill="#94a3b8">6</text>
+        <text x="370" y="68"  text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">2</text>
+        <text x="370" y="158" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">3</text>
+        <!-- nós -->
+        <circle cx="42"  cy="115" r="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="122" cy="55"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="122" cy="115" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="122" cy="175" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="222" cy="55"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="222" cy="175" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="322" cy="55"  r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="322" cy="175" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="402" cy="115" r="20" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+        <text x="42"  y="121" text-anchor="middle" font-size="14" font-weight="600" fill="#1d4ed8">S</text>
+        <text x="122" y="61"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">A</text>
+        <text x="122" y="121" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">B</text>
+        <text x="122" y="181" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">C</text>
+        <text x="222" y="61"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">D</text>
+        <text x="222" y="181" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">E</text>
+        <text x="322" y="61"  text-anchor="middle" font-size="14" font-weight="600" fill="#475569">F</text>
+        <text x="322" y="181" text-anchor="middle" font-size="14" font-weight="600" fill="#475569">H</text>
+        <text x="402" y="121" text-anchor="middle" font-size="14" font-weight="600" fill="#166534">T</text>
+      </svg>
+    </div>
+    <button class="reveal-btn" onclick="toggle(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Revelar resposta
+    </button>
+    <div class="answer">
+      <strong>Enumerando os caminhos simples de S até T:</strong><br><br>
+      <span class="path">S→A→D→F→T</span>: 1+2+3+2 = <strong>8</strong><br>
+      <span class="path">S→B→E→H→T</span>: 3+1+1+3 = <strong>8</strong><br>
+      <span class="path">S→A→B→E→H→T</span>: 1+5+1+3 = <strong>10</strong><br>
+      <span class="path">S→C→E→H→T</span>: 4+2+1+3 = <strong>10</strong><br>
+      <span class="path">S→B→D→F→T</span>: 3+5+3+2 = <strong>13</strong><br>
+      <span class="path">S→C→E→H→T</span> já contado = 10.<br><br>
+      <strong>✅ Os 3 menores caminhos distintos:</strong><br>
+      🥇 <span class="path">S→A→D→F→T</span> — custo <strong>8</strong><br>
+      🥈 <span class="path">S→B→E→H→T</span> — custo <strong>8</strong><br>
+      🥉 <span class="path">S→C→E→H→T</span> ou <span class="path">S→A→B→E→H→T</span> — custo <strong>10</strong>
+      <div class="tip">O algoritmo de Yen (1971) encontra os K menores caminhos de forma eficiente. Manualmente, enumerar e ordenar funciona bem para grafos pequenos.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggle(btn) {
+  var ans = btn.nextElementSibling;
+  var open = ans.classList.toggle('open');
+  btn.innerHTML = open
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Ocultar resposta'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Revelar resposta';
+}
+</script>
+</body>
+</html>

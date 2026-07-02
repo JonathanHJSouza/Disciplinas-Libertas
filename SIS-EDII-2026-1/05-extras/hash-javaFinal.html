@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabela Hash em Java</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #f9f8f6;
+    color: #1a1a1a;
+    font-size: 18px;
+    line-height: 1.65;
+  }
+
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e2ddd5;
+    padding: 0 2.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    height: 58px;
+    gap: 2rem;
+  }
+
+  .logo { font-size: 15px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.01em; }
+  .logo-tag { font-size: 13px; font-weight: 400; color: #999; margin-left: 7px; }
+
+  nav { margin-left: auto; display: flex; gap: 3px; }
+  nav button {
+    background: none; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: #aaa;
+    padding: 6px 11px; font-family: inherit; transition: color 0.1s;
+  }
+  nav button:hover { color: #555; }
+  nav button.active { color: #1a1a1a; font-weight: 600; }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 3.5rem 2.5rem 7rem; }
+
+  .progress-bar { display: flex; gap: 4px; margin-bottom: 3.5rem; }
+  .prog-step { flex: 1; height: 3px; background: #e2ddd5; cursor: pointer; transition: background 0.2s; }
+  .prog-step.done { background: #b0aaa0; }
+  .prog-step.active { background: #1a1a1a; }
+
+  .step { display: none; }
+  .step.active { display: block; animation: up 0.18s ease; }
+  @keyframes up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+  .step-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #b0aaa0; margin-bottom: 0.7rem; }
+  .step-title { font-size: 36px; font-weight: 700; color: #1a1a1a; line-height: 1.15; margin-bottom: 3rem; letter-spacing: -0.01em; }
+
+  .facts { margin-bottom: 2.5rem; }
+  .fact { display: flex; gap: 18px; align-items: baseline; margin-bottom: 1.5rem; }
+  .fact-num { font-size: 13px; font-weight: 600; color: #ccc6bc; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; min-width: 24px; padding-top: 2px; }
+  .fact-text { font-size: 20px; color: #2a2a2a; line-height: 1.55; }
+  .fact-text strong { font-weight: 600; color: #1a1a1a; }
+  .fact-text code { font-family: 'JetBrains Mono', monospace; font-size: 17px; background: #ece8e1; color: #333; padding: 2px 7px; }
+
+  .highlight-box { background: #fff; border: 1px solid #e2ddd5; padding: 1.4rem 1.7rem; margin: 2.2rem 0; }
+  .highlight-box .label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #b0aaa0; margin-bottom: 0.7rem; }
+  .highlight-box .content { font-size: 19px; color: #1a1a1a; font-weight: 500; line-height: 1.55; }
+  .highlight-box .content code { font-family: 'JetBrains Mono', monospace; font-size: 16px; background: #ece8e1; padding: 2px 7px; }
+
+  /* BOTÃO PLAY */
+  .anim-block { margin: 2.2rem 0; border: 1px solid #e2ddd5; background: #fff; }
+  .anim-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.9rem 1.3rem; border-bottom: 1px solid #e2ddd5; background: #f9f8f6;
+  }
+  .anim-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #b0aaa0; }
+  .play-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #1a1a1a; color: #fff; border: none;
+    padding: 8px 18px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: background 0.12s;
+  }
+  .play-btn:hover { background: #333; }
+  .play-btn .tri { width: 0; height: 0; border-left: 9px solid #fff; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+  .play-btn.replaying .tri { border-left: none; width: 9px; height: 9px; border: 2px solid #fff; border-radius: 1px; }
+  .anim-stage { padding: 2rem 1.5rem; min-height: 120px; }
+
+  /* ASCII ANIM */
+  .ascii-letters { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .ascii-letter {
+    text-align: center; font-family: 'JetBrains Mono', monospace;
+    opacity: 0.25; transition: opacity 0.3s, transform 0.3s;
+  }
+  .ascii-letter.lit { opacity: 1; transform: scale(1.08); }
+  .ascii-char { font-size: 38px; font-weight: 600; color: #1a1a1a; background: #f4f1ec; border: 2px solid #e2ddd5; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .ascii-letter.lit .ascii-char { border-color: #1a1a1a; background: #fff; }
+  .ascii-val { font-size: 18px; color: #777; font-weight: 500; }
+  .ascii-letter.lit .ascii-val { color: #1a1a1a; }
+  .ascii-sum {
+    text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 600;
+    color: #1a1a1a; opacity: 0; transition: opacity 0.4s; margin-top: 0.5rem;
+  }
+  .ascii-sum.show { opacity: 1; }
+  .ascii-sum .res { background: #1a1a1a; color: #fff; padding: 4px 14px; margin-left: 8px; }
+
+  /* MODULO ANIM */
+  .mod-track { display: flex; gap: 6px; justify-content: center; margin-bottom: 1.8rem; flex-wrap: wrap; }
+  .mod-cell {
+    width: 58px; height: 58px; border: 2px solid #e2ddd5; background: #f4f1ec;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; color: #b0aaa0;
+    position: relative; transition: all 0.25s;
+  }
+  .mod-cell .idx-num { position: absolute; top: -22px; font-size: 13px; color: #ccc6bc; }
+  .mod-counter {
+    text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600;
+    color: #1a1a1a; margin-bottom: 0.5rem;
+  }
+  .mod-cell.active { border-color: #1a1a1a; background: #1a1a1a; color: #fff; transform: scale(1.12); }
+  .mod-cell.landed { border-color: #1a4a3a; background: #e8f3ee; color: #1a4a3a; }
+
+  /* INSERT ANIM (tabela) */
+  .ins-table { max-width: 560px; margin: 0 auto; }
+  .ins-row { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+  .ins-idx { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: #ccc6bc; width: 26px; text-align: right; flex-shrink: 0; font-weight: 500; }
+  .ins-slot {
+    flex: 1; border: 2px solid #e2ddd5; padding: 10px 16px; font-size: 16px;
+    font-family: 'JetBrains Mono', monospace; color: #ccc6bc; background: #fff;
+    min-height: 46px; display: flex; align-items: center; transition: all 0.35s;
+  }
+  .ins-slot.dropping { border-color: #1a1a1a; background: #f4f1ec; color: #1a1a1a; transform: scale(1.02); }
+  .ins-slot.filled { border-color: #b0aaa0; background: #f9f8f6; color: #1a1a1a; }
+  .ins-slot.collision { border-color: #c0392b; background: #fdf1f1; color: #7a2a2a; }
+  .ins-slot.chained { border-color: #1a4a3a; background: #e8f3ee; color: #1a4a3a; font-size: 14px; }
+
+  .formula { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 1.2rem 0; margin: 1.8rem 0; }
+  .f-part { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600; padding: 8px 18px; background: #fff; border: 2px solid #ddd; color: #1a1a1a; }
+  .f-part.out { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .f-part.bad { background: #fdf1f1; border: 2px solid #e8b4b4; color: #7a2a2a; }
+  .f-op { font-size: 17px; color: #b0aaa0; font-family: 'JetBrains Mono', monospace; }
+
+  /* FUNÇÕES LADO A LADO */
+  .funcs-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: #e2ddd5; margin: 2rem 0; }
+  .func-col { background: #fff; padding: 1.4rem 1.3rem; }
+  .func-name { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 0.4rem; }
+  .func-desc { font-size: 14px; color: #888; margin-bottom: 1.2rem; line-height: 1.45; min-height: 60px; }
+  .func-calc { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #555; line-height: 1.8; }
+  .func-result { margin-top: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }
+  .func-result .box { display: inline-block; background: #1a1a1a; color: #fff; padding: 4px 14px; margin-top: 4px; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #e2ddd5; margin: 2.2rem 0; }
+  .cmp { background: #fff; padding: 1.4rem 1.5rem; }
+  .cmp-title { font-size: 14px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #aaa; margin-bottom: 0.6rem; }
+  .cmp-body { font-size: 17px; color: #444; line-height: 1.55; }
+  .cmp-val { font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 700; margin-top: 0.9rem; color: #1a1a1a; }
+
+  .vis-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #b0aaa0; margin-bottom: 12px; text-align: center; }
+
+  .code-wrap { margin: 2.2rem 0; border: 1px solid #e2ddd5; background: #fff; }
+  .code-label { background: #f9f8f6; border-bottom: 1px solid #e2ddd5; padding: 8px 16px; font-size: 13px; color: #999; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 9px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; letter-spacing: 0.05em; text-transform: uppercase; background: #1a1a1a; color: #fff; }
+  .badge.update { background: #b8860b; color: #fff; }
+
+  pre { margin: 0 !important; background: #fff !important; }
+  .hljs { background: #fff !important; padding: 1.4rem 1.6rem !important; }
+  pre code { font-size: 16px !important; line-height: 1.7 !important; font-family: 'JetBrains Mono', monospace !important; }
+
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e2ddd5; margin: 2.2rem 0; }
+  .sum-item { background: #fff; padding: 1.3rem 1.2rem; }
+  .sum-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #b0aaa0; margin-bottom: 7px; }
+  .sum-val { font-size: 17px; font-weight: 600; color: #1a1a1a; font-family: 'JetBrains Mono', monospace; }
+  .sum-desc { font-size: 13px; color: #aaa; margin-top: 4px; }
+
+  .nav-actions { display: flex; gap: 12px; margin-top: 3.5rem; padding-top: 2.2rem; border-top: 1px solid #e2ddd5; align-items: center; }
+  .btn { padding: 11px 24px; font-size: 15px; font-weight: 600; cursor: pointer; border: 2px solid #1a1a1a; font-family: inherit; transition: all 0.1s; background: none; color: #1a1a1a; }
+  .btn-primary { background: #1a1a1a; color: #fff; }
+  .btn-primary:hover { background: #333; border-color: #333; }
+  .btn-secondary { background: #fff; }
+  .btn-secondary:hover { background: #f4f1ec; }
+  .btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .step-count { margin-left: auto; font-size: 13px; color: #b0aaa0; font-family: 'JetBrains Mono', monospace; }
+
+  hr { border: none; border-top: 1px solid #e2ddd5; margin: 2.5rem 0; }
+
+  @media (max-width: 760px) {
+    .compare { grid-template-columns: 1fr; }
+    .summary { grid-template-columns: 1fr 1fr; }
+    .funcs-grid { grid-template-columns: 1fr; }
+    nav { display: none; }
+    .container { padding: 2.5rem 1.3rem 5rem; }
+    .step-title { font-size: 26px; }
+    .fact-text { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Tabela Hash <span class="logo-tag">Java</span></div>
+  <nav id="stepNav"></nav>
+</header>
+
+<div class="container">
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- STEP 0 -->
+  <div class="step active" id="step-0">
+    <div class="step-eyebrow">Etapa 0 de 9</div>
+    <div class="step-title">O que é uma tabela hash?</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">Você já conhece array. Para buscar um valor num array, você percorre posição por posição até achar.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">Uma tabela hash é uma estrutura que <strong>não procura</strong>. Ela <strong>calcula</strong> em qual posição o dado está.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">Para isso, ela usa uma <strong>função hash</strong>. Essa função recebe a chave do dado e devolve um número. Esse número é a posição no array.</span></div>
+      <div class="fact"><span class="fact-num">04</span><span class="fact-text">A chave pode ser qualquer coisa: um nome, um CPF, um código de produto, um número de matrícula. O que define a chave é o problema que você está resolvendo.</span></div>
+      <div class="fact"><span class="fact-num">05</span><span class="fact-text">Neste exemplo, vamos construir uma agenda de contatos. A chave será o <strong>nome</strong> da pessoa.</span></div>
+    </div>
+
+    <div class="compare">
+      <div class="cmp">
+        <div class="cmp-title">Array comum</div>
+        <div class="cmp-body">Para achar "Carlos", compara nome por nome do índice 0 até encontrar. Com 1000 contatos, pode comparar até 1000 vezes.</div>
+        <div class="cmp-val">O(n)</div>
+      </div>
+      <div class="cmp">
+        <div class="cmp-title">Tabela hash</div>
+        <div class="cmp-body">Calcula a posição de "Carlos" na hora. Vai direto lá. Não importa se tem 10 ou 10 mil contatos.</div>
+        <div class="cmp-val">O(1)</div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">Hash não procura. Hash calcula onde o dado está.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" disabled>Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(1)">Próximo</button>
+      <span class="step-count">1 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: FUNÇÃO HASH -->
+  <div class="step" id="step-1">
+    <div class="step-eyebrow">Etapa 1 de 9</div>
+    <div class="step-title">A função hash</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">A função hash precisa transformar uma chave em um número inteiro. Esse número vai ser o índice do array.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">Se a chave for um número inteiro, é simples: o próprio número pode virar o índice.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">Se a chave for uma String, precisamos converter. A estratégia mais simples é somar os valores numéricos de cada caractere.</span></div>
+      <div class="fact"><span class="fact-num">04</span><span class="fact-text">Todo caractere já tem um número definido pelo padrão ASCII. A letra <strong>A</strong> vale 65, <strong>B</strong> vale 66, <strong>a</strong> vale 97. O Java acessa esse valor automaticamente quando você usa um <code>char</code> numa operação matemática.</span></div>
+    </div>
+
+    <div class="anim-block">
+      <div class="anim-header">
+        <span class="anim-label">Somando o ASCII de "Ana"</span>
+        <button class="play-btn" onclick="playAscii(this)"><span class="tri"></span> Reproduzir</button>
+      </div>
+      <div class="anim-stage">
+        <div class="ascii-letters" id="asciiLetters">
+          <div class="ascii-letter" data-i="0"><div class="ascii-char">A</div><div class="ascii-val">65</div></div>
+          <div class="ascii-letter" data-i="1"><div class="ascii-char">n</div><div class="ascii-val">110</div></div>
+          <div class="ascii-letter" data-i="2"><div class="ascii-char">a</div><div class="ascii-val">97</div></div>
+        </div>
+        <div class="ascii-sum" id="asciiSum">65 + 110 + 97 = <span class="res">272</span></div>
+      </div>
+    </div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">05</span><span class="fact-text">Depois de somar, usamos o operador <code>%</code> para garantir que o resultado caiba dentro do tamanho do array. <code>%</code> é o resto da divisão.</span></div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">O que o % faz</div>
+      <div class="content"><code>272 % 7</code> pergunta: quanto sobra quando você divide 272 por 7? Sobra 6. O resultado sempre fica entre 0 e 6. Nunca passa do tamanho do array.</div>
+    </div>
+
+    <div class="anim-block">
+      <div class="anim-header">
+        <span class="anim-label">O % encaixando 272 dentro de um array de 7</span>
+        <button class="play-btn" onclick="playMod(this)"><span class="tri"></span> Reproduzir</button>
+      </div>
+      <div class="anim-stage">
+        <div class="mod-counter" id="modCounter">contando: 0</div>
+        <div class="mod-track" id="modTrack"></div>
+      </div>
+    </div>
+
+    <div class="formula">
+      <span class="f-part">"Ana"</span>
+      <span class="f-op">hash()</span>
+      <span class="f-part out">posição 6</span>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">O mesmo nome sempre gera o mesmo índice. "Ana" vai para a posição 6 hoje, amanhã e sempre. É isso que torna a busca possível.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(0)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Próximo</button>
+      <span class="step-count">2 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 2: VÁRIAS FÓRMULAS -->
+  <div class="step" id="step-2">
+    <div class="step-eyebrow">Etapa 2 de 9</div>
+    <div class="step-title">Existem várias funções hash</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">A soma de ASCII é apenas <strong>uma</strong> forma de fazer hash. Não é a única, nem a melhor.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">Existem muitas funções hash diferentes. Cada uma distribui os dados de um jeito. Umas geram menos colisões que outras.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">Veja três exemplos calculando o índice do mesmo nome, "Ana", num array de tamanho 7. Repare que cada fórmula chega num resultado diferente.</span></div>
+    </div>
+
+    <div class="funcs-grid">
+      <div class="func-col">
+        <div class="func-name">Soma simples</div>
+        <div class="func-desc">Soma o ASCII de cada letra. É a mais fácil de entender, mas anagramas colidem.</div>
+        <div class="func-calc">65 + 110 + 97<br>= 272<br>272 % 7</div>
+        <div class="func-result">índice<br><span class="box">6</span></div>
+      </div>
+      <div class="func-col">
+        <div class="func-name">Multiplicação por primo</div>
+        <div class="func-desc">Multiplica o total por um número primo (31) a cada letra. A ordem das letras passa a importar.</div>
+        <div class="func-calc">((65)*31 + 110)<br>*31 + 97<br>= 65122<br>65122 % 7</div>
+        <div class="func-result">índice<br><span class="box">3</span></div>
+      </div>
+      <div class="func-col">
+        <div class="func-name">hashCode do Java</div>
+        <div class="func-desc">O próprio Java tem um método pronto. É o que se usa na prática em código real.</div>
+        <div class="func-calc">"Ana".hashCode()<br>= 65763<br>65763 % 7</div>
+        <div class="func-result">índice<br><span class="box">2</span></div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">A função hash não é fixa. Você escolhe ou cria a sua. Neste exemplo usamos a soma simples porque é a mais clara para aprender. Em código de produção, normalmente se usa o <code>hashCode()</code> do Java.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(1)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Próximo</button>
+      <span class="step-count">3 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 3: CLASSES -->
+  <div class="step" id="step-3">
+    <div class="step-eyebrow">Etapa 3 de 9</div>
+    <div class="step-title">Criando as classes</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">Vamos criar duas classes: <code>Contato</code> para representar cada contato, e <code>TabelaHash</code> para guardar e buscar esses contatos.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">A classe <code>Contato</code> tem dois atributos: nome e telefone. O nome vai ser a chave da tabela hash.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">A classe <code>TabelaHash</code> tem um array interno. Cada posição desse array vai guardar um contato.</span></div>
+      <div class="fact"><span class="fact-num">04</span><span class="fact-text">O tamanho do array é 7. Por enquanto. Vamos entender por que isso pode ser um problema mais pra frente.</span></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">Contato.java <span class="badge">novo</span></div>
+      <pre><code class="language-java">public class Contato {
+    String nome;
+    String telefone;
+
+    public Contato(String nome, String telefone) {
+        this.nome = nome;
+        this.telefone = telefone;
+    }
+
+    @Override
+    public String toString() {
+        return nome + " -&gt; " + telefone;
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">TabelaHash.java <span class="badge">novo</span></div>
+      <pre><code class="language-java">public class TabelaHash {
+    private static final int TAMANHO = 7;
+    private Contato[] tabela = new Contato[TAMANHO];
+
+    private int hash(String chave) {
+        int soma = 0;
+        for (char c : chave.toCharArray()) {
+            soma += c;          // Java usa o valor ASCII do char
+        }
+        return soma % TAMANHO;  // garante que o indice cabe no array
+    }
+}</code></pre>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(2)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Próximo</button>
+      <span class="step-count">4 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 4: INSERIR -->
+  <div class="step" id="step-4">
+    <div class="step-eyebrow">Etapa 4 de 9</div>
+    <div class="step-title">Inserindo contatos</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">Para inserir um contato, calculamos o índice com <code>hash()</code> e colocamos o contato nessa posição do array.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">São duas linhas: calcula o índice, coloca no array.</span></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">TabelaHash.java <span class="badge">novo</span></div>
+      <pre><code class="language-java">public void inserir(Contato contato) {
+    int indice = hash(contato.nome);
+    tabela[indice] = contato;
+    System.out.println("Guardado em [" + indice + "]: " + contato);
+}</code></pre>
+    </div>
+
+    <div class="anim-block">
+      <div class="anim-header">
+        <span class="anim-label">Inserindo Ana, Bia e Carlos um por um</span>
+        <button class="play-btn" onclick="playInsert(this)"><span class="tri"></span> Reproduzir</button>
+      </div>
+      <div class="anim-stage">
+        <div class="ins-table" id="insTable"></div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">Inserir é calcular o índice e guardar. Nada mais. A função hash faz todo o trabalho.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(3)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(5)">Próximo</button>
+      <span class="step-count">5 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 5: COLISÃO -->
+  <div class="step" id="step-5">
+    <div class="step-eyebrow">Etapa 5 de 9</div>
+    <div class="step-title">O problema: colisão</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">O array tem 7 posições. Os nomes possíveis são infinitos. Cedo ou tarde, dois nomes diferentes vão gerar o mesmo índice.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">Isso se chama <strong>colisão</strong>. Não é um bug nem um descuido. É uma consequência matemática inevitável.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">Exemplo concreto: "Ana" e "Naa" têm as mesmas letras em ordem diferente. A soma do ASCII é idêntica. Os dois geram o índice 6.</span></div>
+      <div class="fact"><span class="fact-num">04</span><span class="fact-text">Com a implementação atual, se você inserir "Naa" depois de "Ana", o dado de "Ana" é <strong>apagado</strong>. A posição 6 fica só com "Naa".</span></div>
+    </div>
+
+    <div class="anim-block">
+      <div class="anim-header">
+        <span class="anim-label">Naa sobrescrevendo Ana na posição 6</span>
+        <button class="play-btn" onclick="playCollision(this)"><span class="tri"></span> Reproduzir</button>
+      </div>
+      <div class="anim-stage">
+        <div class="ins-table" id="collisionTable"></div>
+      </div>
+    </div>
+
+    <div class="formula">
+      <span class="f-part">"Ana"</span><span class="f-op">hash()</span><span class="f-part out">6</span>
+      <span class="f-op" style="margin: 0 8px;">e também</span>
+      <span class="f-part">"Naa"</span><span class="f-op">hash()</span><span class="f-part bad">6</span>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">Colisão é inevitável. O que diferencia uma boa implementação é como ela trata esse problema.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(4)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(6)">Próximo</button>
+      <span class="step-count">6 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 6: SOLUÇÃO -->
+  <div class="step" id="step-6">
+    <div class="step-eyebrow">Etapa 6 de 9</div>
+    <div class="step-title">Resolvendo a colisão</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">O problema é simples: cada posição do array comporta apenas um contato. Quando dois querem a mesma posição, um apaga o outro.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">A solução é fazer cada posição comportar <strong>mais de um contato</strong>.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">Para isso, em vez de guardar um <code>Contato</code> em cada posição, vamos guardar uma <strong>lista de contatos</strong>.</span></div>
+      <div class="fact"><span class="fact-num">04</span><span class="fact-text">O Java já tem uma lista pronta que serve bem: a <code>ArrayList</code>. Ela permite adicionar quantos itens quisermos, sem definir tamanho antes.</span></div>
+      <div class="fact"><span class="fact-num">05</span><span class="fact-text">A tabela deixa de ser um array de contatos e passa a ser uma <strong>lista de listas</strong>: <code>ArrayList&lt;ArrayList&lt;Contato&gt;&gt;</code>. A tabela é uma lista. Cada posição dela guarda outra lista. Cada uma dessas guarda os contatos.</span></div>
+    </div>
+
+    <div class="anim-block">
+      <div class="anim-header">
+        <span class="anim-label">Agora Ana e Naa convivem na lista da posição 6</span>
+        <button class="play-btn" onclick="playChaining(this)"><span class="tri"></span> Reproduzir</button>
+      </div>
+      <div class="anim-stage">
+        <div class="ins-table" id="chainingTable"></div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">Essa técnica tem nome: encadeamento, ou chaining em inglês. Cada posição da tabela encadeia uma lista de contatos que colidiram.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(5)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(7)">Próximo</button>
+      <span class="step-count">7 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 7: ATUALIZAR -->
+  <div class="step" id="step-7">
+    <div class="step-eyebrow">Etapa 7 de 9</div>
+    <div class="step-title">Atualizando a classe</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">Agora vamos reescrever <code>TabelaHash</code> usando uma <code>ArrayList</code> em cada posição.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">No construtor, criamos a lista principal e adicionamos uma lista vazia para cada uma das 7 posições. Sem isso, não haveria onde guardar os contatos.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">No <code>inserir</code>, antes fazíamos <code>tabela[indice] = contato</code>. Agora fazemos <code>tabela.get(indice).add(contato)</code>. Pegamos a lista daquela posição e adicionamos o contato nela.</span></div>
+      <div class="fact"><span class="fact-num">04</span><span class="fact-text">Repare na diferença: como agora é uma <code>ArrayList</code> e não mais um array, acessamos cada posição com <code>.get(indice)</code> em vez de colchetes <code>[indice]</code>.</span></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">TabelaHash.java <span class="badge update">atualizado</span></div>
+      <pre><code class="language-java">import java.util.ArrayList;
+
+public class TabelaHash {
+    private static final int TAMANHO = 7;
+    private ArrayList&lt;ArrayList&lt;Contato&gt;&gt; tabela;
+
+    public TabelaHash() {
+        tabela = new ArrayList&lt;ArrayList&lt;Contato&gt;&gt;();
+        for (int i = 0; i &lt; TAMANHO; i++) {
+            tabela.add(new ArrayList&lt;Contato&gt;()); // uma lista vazia por posicao
+        }
+    }
+
+    private int hash(String chave) {
+        int soma = 0;
+        for (char c : chave.toCharArray()) soma += c;
+        return soma % TAMANHO;
+    }
+
+    public void inserir(Contato contato) {
+        int indice = hash(contato.nome);
+        tabela.get(indice).add(contato); // adiciona na lista, nao substitui
+        System.out.println("Guardado em [" + indice + "]: " + contato);
+    }
+}</code></pre>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">A mudança foi pequena no código, mas grande no comportamento. Antes: colisão apagava. Agora: colisão acumula na lista.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(6)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(8)">Próximo</button>
+      <span class="step-count">8 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 8: BUSCAR -->
+  <div class="step" id="step-8">
+    <div class="step-eyebrow">Etapa 8 de 9</div>
+    <div class="step-title">Buscando um contato</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">Para buscar, usamos a mesma <code>hash()</code> que usamos para inserir. Passamos o nome, ela devolve o índice.</span></div>
+      <div class="fact"><span class="fact-num">02</span><span class="fact-text">Vamos direto para aquela posição no array. Sem percorrer tudo.</span></div>
+      <div class="fact"><span class="fact-num">03</span><span class="fact-text">Aquela posição tem uma lista. Percorremos essa lista comparando o nome de cada contato com o nome buscado.</span></div>
+      <div class="fact"><span class="fact-num">04</span><span class="fact-text">Na maioria dos casos, a lista tem apenas um contato. A busca é praticamente direta.</span></div>
+    </div>
+
+    <div class="anim-block">
+      <div class="anim-header">
+        <span class="anim-label">Buscando Carlos: calcula o índice e vai direto</span>
+        <button class="play-btn" onclick="playSearch(this)"><span class="tri"></span> Reproduzir</button>
+      </div>
+      <div class="anim-stage">
+        <div class="ins-table" id="searchTable"></div>
+      </div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">TabelaHash.java <span class="badge">novo</span></div>
+      <pre><code class="language-java">public Contato buscar(String nome) {
+    int indice = hash(nome);   // mesmo calculo do inserir
+
+    for (Contato c : tabela.get(indice)) {
+        if (c.nome.equals(nome)) {
+            return c;          // achou
+        }
+    }
+    return null;               // nao encontrado
+}
+
+public void exibirBusca(String nome) {
+    Contato resultado = buscar(nome);
+    if (resultado != null) {
+        System.out.println("Encontrado: " + resultado);
+    } else {
+        System.out.println(nome + " nao encontrado.");
+    }
+}</code></pre>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Para fixar</div>
+      <div class="content">A função hash que guardou o contato é a mesma que encontra. Esse é o segredo da tabela hash.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(7)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(9)">Próximo</button>
+      <span class="step-count">9 / 10</span>
+    </div>
+  </div>
+
+  <!-- STEP 9: COMPLETO -->
+  <div class="step" id="step-9">
+    <div class="step-eyebrow">Etapa 9 de 9</div>
+    <div class="step-title">Programa completo</div>
+
+    <div class="facts">
+      <div class="fact"><span class="fact-num">01</span><span class="fact-text">Três arquivos. Copie, abra no IDE e rode.</span></div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">Contato.java</div>
+      <pre><code class="language-java">public class Contato {
+    String nome;
+    String telefone;
+
+    public Contato(String nome, String telefone) {
+        this.nome = nome;
+        this.telefone = telefone;
+    }
+
+    @Override
+    public String toString() {
+        return nome + " -&gt; " + telefone;
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">TabelaHash.java</div>
+      <pre><code class="language-java">import java.util.ArrayList;
+
+public class TabelaHash {
+    private static final int TAMANHO = 7;
+    private ArrayList&lt;ArrayList&lt;Contato&gt;&gt; tabela;
+
+    public TabelaHash() {
+        tabela = new ArrayList&lt;ArrayList&lt;Contato&gt;&gt;();
+        for (int i = 0; i &lt; TAMANHO; i++) {
+            tabela.add(new ArrayList&lt;Contato&gt;());
+        }
+    }
+
+    private int hash(String chave) {
+        int soma = 0;
+        for (char c : chave.toCharArray()) soma += c;
+        return soma % TAMANHO;
+    }
+
+    public void inserir(Contato contato) {
+        int indice = hash(contato.nome);
+        tabela.get(indice).add(contato);
+        System.out.println("Guardado em [" + indice + "]: " + contato);
+    }
+
+    public Contato buscar(String nome) {
+        int indice = hash(nome);
+        for (Contato c : tabela.get(indice)) {
+            if (c.nome.equals(nome)) return c;
+        }
+        return null;
+    }
+
+    public void exibirBusca(String nome) {
+        Contato resultado = buscar(nome);
+        if (resultado != null)
+            System.out.println("Encontrado: " + resultado);
+        else
+            System.out.println(nome + " nao encontrado.");
+    }
+
+    public void exibir() {
+        System.out.println("=== TABELA HASH ===");
+        for (int i = 0; i &lt; TAMANHO; i++) {
+            System.out.print("[" + i + "] ");
+            if (tabela.get(i).isEmpty()) {
+                System.out.println("vazio");
+            } else {
+                for (Contato c : tabela.get(i)) System.out.print(c + "  ");
+                System.out.println();
+            }
+        }
+        System.out.println("===================");
+    }
+}</code></pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-label">Main.java <span class="badge">entry point</span></div>
+      <pre><code class="language-java">public class Main {
+    public static void main(String[] args) {
+        TabelaHash agenda = new TabelaHash();
+
+        agenda.inserir(new Contato("Ana Silva",   "(11) 99999-0001"));
+        agenda.inserir(new Contato("Bia Souza",   "(31) 97777-0002"));
+        agenda.inserir(new Contato("Carlos Melo", "(21) 98888-0003"));
+        agenda.inserir(new Contato("Diego Pinto", "(41) 96666-0004"));
+        agenda.inserir(new Contato("Eva Nunes",   "(51) 95555-0005"));
+
+        agenda.exibir();
+
+        System.out.println("--- Buscas ---");
+        agenda.exibirBusca("Carlos Melo"); // existe -&gt; encontra
+        agenda.exibirBusca("Fernanda");    // nao existe -&gt; null
+    }
+}</code></pre>
+    </div>
+
+    <hr>
+
+    <div class="summary">
+      <div class="sum-item"><div class="sum-label">Estrutura</div><div class="sum-val">ArrayList</div><div class="sum-desc">lista de listas</div></div>
+      <div class="sum-item"><div class="sum-label">Inserção</div><div class="sum-val">O(1)</div><div class="sum-desc">calcula e guarda</div></div>
+      <div class="sum-item"><div class="sum-label">Busca</div><div class="sum-val">O(1)</div><div class="sum-desc">calcula e vai direto</div></div>
+      <div class="sum-item"><div class="sum-label">Colisão</div><div class="sum-val">chaining</div><div class="sum-desc">lista por posição</div></div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="label">Próximo desafio</div>
+      <div class="content">Implemente <code>remover(String nome)</code>. Calcule o índice, percorra a lista e remova com <code>lista.remove(contato)</code>.</div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="goTo(8)">Anterior</button>
+      <button class="btn btn-primary" onclick="goTo(0)">Recomeçar</button>
+      <span class="step-count">10 / 10</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const TOTAL = 10;
+  const labels = ['O que é','Função hash','Várias hash','Classes','Inserir','Colisão','Solução','Atualizar','Buscar','Completo'];
+  let current = 0;
+
+  function buildNav() {
+    const nav = document.getElementById('stepNav');
+    const bar = document.getElementById('progressBar');
+    nav.innerHTML = ''; bar.innerHTML = '';
+    for (let i = 0; i < TOTAL; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = labels[i];
+      btn.onclick = () => goTo(i);
+      if (i === current) btn.classList.add('active');
+      nav.appendChild(btn);
+      const seg = document.createElement('div');
+      seg.className = 'prog-step' + (i < current ? ' done' : i === current ? ' active' : '');
+      seg.onclick = () => goTo(i);
+      bar.appendChild(seg);
+    }
+  }
+
+  function goTo(idx) {
+    document.getElementById('step-' + current).classList.remove('active');
+    current = idx;
+    document.getElementById('step-' + current).classList.add('active');
+    buildNav();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // ASCII animation
+  async function playAscii(btn) {
+    if (btn.dataset.running) return;
+    btn.dataset.running = '1';
+    const letters = document.querySelectorAll('#asciiLetters .ascii-letter');
+    const sum = document.getElementById('asciiSum');
+    letters.forEach(l => l.classList.remove('lit'));
+    sum.classList.remove('show');
+    await sleep(300);
+    for (const l of letters) { l.classList.add('lit'); await sleep(700); }
+    await sleep(400);
+    sum.classList.add('show');
+    delete btn.dataset.running;
+  }
+
+  // Modulo animation
+  function buildModTrack() {
+    const track = document.getElementById('modTrack');
+    track.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const c = document.createElement('div');
+      c.className = 'mod-cell';
+      c.innerHTML = '<span class="idx-num">' + i + '</span>' + i;
+      track.appendChild(c);
+    }
+  }
+  async function playMod(btn) {
+    if (btn.dataset.running) return;
+    btn.dataset.running = '1';
+    buildModTrack();
+    const cells = document.querySelectorAll('#modTrack .mod-cell');
+    const counter = document.getElementById('modCounter');
+    await sleep(300);
+    let pos = 0;
+    for (let n = 1; n <= 272; n++) {
+      pos = n % 7;
+      cells.forEach(c => c.classList.remove('active'));
+      cells[pos].classList.add('active');
+      counter.textContent = 'contando: ' + n;
+      if (n < 30) await sleep(60);
+      else if (n < 60) await sleep(18);
+      else if (n > 265) await sleep(120);
+      else await sleep(3);
+    }
+    cells.forEach(c => c.classList.remove('active'));
+    cells[6].classList.add('landed');
+    counter.textContent = '272 % 7 = 6  →  parou na posição 6';
+    delete btn.dataset.running;
+  }
+
+  // Tabela helpers
+  function buildTable(id, rows) {
+    const t = document.getElementById(id);
+    t.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const row = document.createElement('div');
+      row.className = 'ins-row';
+      row.innerHTML = '<span class="ins-idx">' + i + '</span><div class="ins-slot" data-i="' + i + '">vazio</div>';
+      t.appendChild(row);
+    }
+  }
+  function slot(id, i) { return document.querySelector('#' + id + ' .ins-slot[data-i="' + i + '"]'); }
+
+  // Insert animation
+  async function playInsert(btn) {
+    if (btn.dataset.running) return;
+    btn.dataset.running = '1';
+    buildTable('insTable');
+    const contatos = [
+      { nome: 'Ana', tel: '(11) 99999-0001', idx: 6 },
+      { nome: 'Bia', tel: '(31) 97777-0002', idx: 3 },
+      { nome: 'Carlos', tel: '(21) 98888-0003', idx: 2 }
+    ];
+    await sleep(300);
+    for (const c of contatos) {
+      const s = slot('insTable', c.idx);
+      s.classList.add('dropping');
+      s.textContent = c.nome + ' chegando...';
+      await sleep(800);
+      s.classList.remove('dropping');
+      s.classList.add('filled');
+      s.textContent = c.nome + ' -> ' + c.tel;
+      await sleep(500);
+    }
+    delete btn.dataset.running;
+  }
+
+  // Collision animation
+  async function playCollision(btn) {
+    if (btn.dataset.running) return;
+    btn.dataset.running = '1';
+    buildTable('collisionTable');
+    await sleep(300);
+    const s = slot('collisionTable', 6);
+    s.classList.add('dropping'); s.textContent = 'Ana chegando...';
+    await sleep(800);
+    s.classList.remove('dropping'); s.classList.add('filled');
+    s.textContent = 'Ana -> (11) 99999-0001';
+    await sleep(1000);
+    s.classList.remove('filled'); s.classList.add('dropping');
+    s.textContent = 'Naa quer a posição 6 também...';
+    await sleep(1100);
+    s.classList.remove('dropping'); s.classList.add('collision');
+    s.textContent = 'Naa -> (21) 98888-0003   (Ana foi apagada)';
+    delete btn.dataset.running;
+  }
+
+  // Chaining animation
+  async function playChaining(btn) {
+    if (btn.dataset.running) return;
+    btn.dataset.running = '1';
+    buildTable('chainingTable');
+    await sleep(300);
+    const s = slot('chainingTable', 6);
+    s.classList.add('dropping'); s.textContent = 'Ana entrando na lista...';
+    await sleep(800);
+    s.classList.remove('dropping'); s.classList.add('chained');
+    s.textContent = '[ Ana -> (11) 99999-0001 ]';
+    await sleep(1000);
+    s.classList.add('dropping');
+    s.textContent = '[ Ana ]  +  Naa entrando...';
+    await sleep(1100);
+    s.classList.remove('dropping');
+    s.textContent = '[ Ana -> ...0001 ]  [ Naa -> ...0003 ]';
+    delete btn.dataset.running;
+  }
+
+  // Search animation
+  async function playSearch(btn) {
+    if (btn.dataset.running) return;
+    btn.dataset.running = '1';
+    const t = document.getElementById('searchTable');
+    t.innerHTML = '';
+    const data = {
+      2: 'Carlos -> (21) 98888-0003',
+      3: 'Bia -> (31) 97777-0002',
+      6: 'Ana -> (11) 99999-0001'
+    };
+    for (let i = 0; i < 7; i++) {
+      const row = document.createElement('div');
+      row.className = 'ins-row';
+      const content = data[i] || 'vazio';
+      const cls = data[i] ? 'ins-slot filled' : 'ins-slot';
+      row.innerHTML = '<span class="ins-idx">' + i + '</span><div class="' + cls + '" data-i="' + i + '">' + content + '</div>';
+      t.appendChild(row);
+    }
+    await sleep(400);
+    const s = slot('searchTable', 2);
+    s.classList.remove('filled'); s.classList.add('dropping');
+    s.textContent = 'hash("Carlos") = 2  →  procurando aqui';
+    await sleep(1400);
+    s.classList.remove('dropping'); s.classList.add('chained');
+    s.textContent = 'Encontrado: Carlos -> (21) 98888-0003';
+    delete btn.dataset.running;
+  }
+
+  buildNav();
+  hljs.highlightAll();
+</script>
+</body>
+</html>

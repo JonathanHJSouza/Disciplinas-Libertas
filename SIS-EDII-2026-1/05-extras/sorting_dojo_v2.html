@@ -1,0 +1,701 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.dojo { padding: 1.5rem 0; font-family: var(--font-sans, sans-serif); }
+.top-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.algo-btn { padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--color-border-secondary); background: var(--color-background-secondary); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--color-text-secondary); transition: all .15s; }
+.algo-btn.active { background: #3C3489; border-color: #3C3489; color: #EEEDFE; }
+.xp-bar-wrap { flex: 1; height: 8px; background: var(--color-background-secondary); border-radius: 4px; overflow: hidden; border: 0.5px solid var(--color-border-tertiary); min-width: 60px; }
+.xp-bar { height: 100%; background: #7F77DD; border-radius: 4px; transition: width .4s ease; }
+.xp-label { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; }
+.hearts { display: flex; gap: 3px; }
+
+.stage-tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+.stage-tab { flex: 1; padding: 8px 4px; border-radius: var(--border-radius-md); border: 1.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); cursor: pointer; text-align: center; font-size: 12px; color: var(--color-text-tertiary); transition: all .15s; }
+.stage-tab .stnum { font-size: 18px; display: block; margin-bottom: 2px; }
+.stage-tab.unlocked { color: var(--color-text-secondary); border-color: var(--color-border-secondary); }
+.stage-tab.active { border-color: #7F77DD; color: #534AB7; background: #EEEDFE; }
+.stage-tab.done { border-color: #1D9E75; color: #0F6E56; background: #E1F5EE; }
+.stage-tab.locked { opacity: .45; cursor: not-allowed; }
+
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+.stage-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.stage-sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.25rem; line-height: 1.6; }
+
+/* Viz */
+.viz-row { display: flex; gap: 6px; align-items: flex-end; margin: 1rem 0; }
+.bar { flex: 1; border-radius: 4px 4px 0 0; background: #AFA9EC; transition: height .3s ease, background .2s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font-size: 11px; font-weight: 500; color: #3C3489; }
+.bar.comparing { background: #FAC775; color: #633806; }
+.bar.swapping { background: #F09595; color: #501313; }
+.bar.sorted { background: #5DCAA5; color: #04342C; }
+.viz-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.viz-controls button { padding: 6px 14px; font-size: 13px; }
+.speed-wrap { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+.step-counter { font-size: 12px; color: var(--color-text-secondary); margin-left: auto; }
+
+/* Quiz progress */
+.quiz-prog { display: flex; gap: 5px; margin-bottom: 1rem; }
+.qp-dot { flex: 1; height: 6px; border-radius: 3px; background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); transition: background .2s; }
+.qp-dot.done-ok { background: #5DCAA5; border-color: #1D9E75; }
+.qp-dot.done-err { background: #F09595; border-color: #D85A30; }
+.qp-dot.current { background: #FAC775; border-color: #BA7517; }
+
+.q-type-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; margin-bottom: 10px; }
+.qt-mc   { background: #EEEDFE; color: #534AB7; }
+.qt-tf   { background: #E1F5EE; color: #0F6E56; }
+.qt-ord  { background: #FAEEDA; color: #633806; }
+.qt-fill { background: #FAECE7; color: #993C1D; }
+.qt-match { background: #E6F1FB; color: #185FA5; }
+
+.q-text { font-size: 14px; line-height: 1.6; color: var(--color-text-primary); margin-bottom: 12px; }
+
+/* Multiple choice */
+.opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.opts-grid.single { grid-template-columns: 1fr; }
+.opt-btn { padding: 10px 12px; border-radius: var(--border-radius-md); border: 1.5px solid var(--color-border-secondary); background: var(--color-background-secondary); cursor: pointer; font-size: 13px; text-align: left; transition: all .15s; color: var(--color-text-primary); line-height: 1.4; font-family: inherit; }
+.opt-btn:hover:not(:disabled) { border-color: #7F77DD; background: #EEEDFE; color: #3C3489; }
+.opt-btn.correct { border-color: #1D9E75 !important; background: #E1F5EE !important; color: #0F6E56 !important; }
+.opt-btn.wrong   { border-color: #D85A30 !important; background: #FAECE7 !important; color: #4A1B0C !important; }
+.opt-btn.code-opt { font-family: var(--font-mono, monospace); font-size: 12px; white-space: pre; }
+
+/* True/False */
+.tf-row { display: flex; gap: 10px; margin-top: 8px; }
+.tf-btn { flex: 1; padding: 14px; border-radius: var(--border-radius-md); border: 1.5px solid var(--color-border-secondary); background: var(--color-background-secondary); cursor: pointer; font-size: 15px; font-weight: 500; text-align: center; transition: all .15s; color: var(--color-text-primary); font-family: inherit; }
+.tf-btn:hover:not(:disabled) { border-color: #7F77DD; background: #EEEDFE; }
+
+/* Code snippet */
+.code-snippet { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: .75rem 1rem; font-family: var(--font-mono, monospace); font-size: 12px; line-height: 1.8; color: var(--color-text-primary); margin-bottom: 10px; white-space: pre; overflow-x: auto; }
+.hl { background: #EEEDFE; color: #534AB7; border-radius: 3px; padding: 0 3px; font-weight: 500; }
+
+/* Order drag */
+.order-list { display: flex; flex-direction: column; gap: 6px; }
+.order-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--border-radius-md); border: 1.5px solid var(--color-border-secondary); background: var(--color-background-secondary); cursor: grab; font-size: 13px; color: var(--color-text-primary); transition: border-color .15s; user-select: none; }
+.order-item:hover { border-color: #7F77DD; }
+.order-item.drag-over { border-color: #7F77DD; background: #EEEDFE; }
+.order-item .drag-handle { color: var(--color-text-tertiary); font-size: 16px; }
+.order-num { width: 22px; height: 22px; border-radius: 50%; background: #EEEDFE; color: #534AB7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+.order-item.correct-pos { border-color: #1D9E75; background: #E1F5EE; }
+.order-item.wrong-pos   { border-color: #D85A30; background: #FAECE7; }
+.order-item.code-item   { font-family: var(--font-mono, monospace); font-size: 12px; }
+
+/* Inline blank fill */
+.inline-code { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: .75rem 1rem; font-family: var(--font-mono, monospace); font-size: 13px; line-height: 2.2; color: var(--color-text-primary); margin-bottom: 10px; white-space: pre-wrap; }
+.inline-blank { display: inline-block; min-width: 70px; padding: 1px 6px; border-bottom: 2px solid #7F77DD; background: #EEEDFE; color: #3C3489; border-radius: 3px; cursor: pointer; font-weight: 500; text-align: center; transition: background .15s; }
+.inline-blank.sel { background: #7F77DD; color: #EEEDFE; }
+.inline-blank.ok  { background: #E1F5EE; color: #0F6E56; border-bottom-color: #1D9E75; }
+.inline-blank.err { background: #FAECE7; color: #993C1D; border-bottom-color: #D85A30; }
+.token-bank { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.token { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--color-border-secondary); background: var(--color-background-primary); cursor: pointer; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 500; color: var(--color-text-primary); transition: all .15s; }
+.token:hover { border-color: #7F77DD; background: #EEEDFE; color: #3C3489; }
+.token.sel  { background: #7F77DD; color: #EEEDFE; border-color: #534AB7; }
+.token.used { opacity: .3; pointer-events: none; }
+
+/* Feedback */
+.feedback { margin-top: 10px; padding: 10px 14px; border-radius: var(--border-radius-md); font-size: 13px; line-height: 1.5; }
+.feedback.ok  { background: #E1F5EE; color: #0F6E56; border: 0.5px solid #5DCAA5; }
+.feedback.err { background: #FAECE7; color: #993C1D; border: 0.5px solid #F0997B; }
+
+/* Blanks stage */
+.full-code { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 1rem 1.25rem; font-family: var(--font-mono, monospace); font-size: 13px; line-height: 2; color: var(--color-text-primary); white-space: pre; overflow-x: auto; }
+.blank { display: inline-block; min-width: 80px; padding: 0 6px; border-bottom: 2px solid #7F77DD; background: #EEEDFE; color: #3C3489; border-radius: 3px; cursor: pointer; font-weight: 500; text-align: center; }
+.blank.ok  { background: #E1F5EE; color: #0F6E56; border-bottom-color: #1D9E75; }
+.blank.err { background: #FAECE7; color: #993C1D; border-bottom-color: #D85A30; }
+
+/* Recipe */
+.logic-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; padding: 10px 14px; border-radius: var(--border-radius-md); background: var(--color-background-secondary); border: 1.5px solid var(--color-border-tertiary); cursor: grab; transition: border-color .15s; }
+.logic-step:hover { border-color: #7F77DD; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; background: #EEEDFE; color: #534AB7; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+.step-text { font-size: 13px; color: var(--color-text-primary); line-height: 1.5; }
+
+.next-btn { width: 100%; padding: 12px; margin-top: 8px; border-radius: var(--border-radius-md); border: none; background: #534AB7; color: #EEEDFE; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; font-family: inherit; }
+.next-btn:hover { background: #3C3489; }
+.next-btn:disabled { background: var(--color-background-secondary); color: var(--color-text-tertiary); cursor: not-allowed; border: 0.5px solid var(--color-border-tertiary); }
+
+.celebrate { text-align: center; padding: 2rem 1rem; }
+.celebrate .big { font-size: 48px; margin-bottom: 8px; }
+.celebrate h2 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 8px; }
+.celebrate p { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.5rem; line-height: 1.6; }
+.score-row { display: flex; justify-content: center; gap: 24px; margin: 1rem 0; }
+.score-item { text-align: center; }
+.score-num { font-size: 28px; font-weight: 500; color: var(--color-text-primary); }
+.score-lbl { font-size: 12px; color: var(--color-text-secondary); }
+</style>
+
+<div class="dojo">
+<h2 class="sr-only">Sorting Dojo v2 — jogo interativo para aprender algoritmos de ordenação em Java</h2>
+
+<div class="top-bar">
+  <button class="algo-btn active" onclick="selectAlgo('bubble',event)">Bubble Sort</button>
+  <button class="algo-btn" onclick="selectAlgo('insertion',event)">Insertion Sort</button>
+  <button class="algo-btn" onclick="selectAlgo('selection',event)">Selection Sort</button>
+  <div class="xp-bar-wrap"><div class="xp-bar" id="xpBar" style="width:0%"></div></div>
+  <span class="xp-label" id="xpLabel">0 XP</span>
+  <div class="hearts" id="heartsEl">❤️❤️❤️</div>
+</div>
+
+<div class="stage-tabs" id="stageTabs"></div>
+<div id="stageContent"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const ALGOS = {
+bubble: {
+  name: 'Bubble Sort',
+  tagline: 'Borbulha o maior para o fim a cada passagem',
+  concept: 'O Bubble Sort percorre o array várias vezes. Em cada passagem, compara cada elemento com seu vizinho da direita — se o da esquerda for maior, troca os dois. O maior valor "borbulha" até o final. A cada passagem completa, o último elemento já está no lugar, então o loop fica menor.',
+  quizBank: [
+    // 1. conceito
+    { type:'mc', badge:'Conceito', q:'O que significa "borbulhar" no Bubble Sort?',
+      opts:['Apagar elementos duplicados','O maior valor vai subindo até o fim do array a cada passagem','O array é dividido ao meio','Os menores vão para o início em um único passo'],
+      correct:1, exp:'A cada passagem completa do loop interno, o maior valor ainda não ordenado "sobe" (borbulha) para sua posição final no fim do array.' },
+    // 2. V/F
+    { type:'tf', badge:'Verdadeiro ou Falso', q:'Após a primeira passagem completa do loop interno, o maior elemento do array já está na posição correta.',
+      correct:true, exp:'Correto! O maior elemento "borbulha" até o último índice na primeira passagem. Por isso podemos reduzir n-- a cada rodada.' },
+    // 3. V/F
+    { type:'tf', badge:'Verdadeiro ou Falso', q:'O Bubble Sort precisa sempre percorrer o array o mesmo número de vezes, independente da entrada.',
+      correct:false, exp:'Falso. Com a otimização n--, o loop externo diminui a janela a cada iteração. Versões mais avançadas adicionam uma flag para parar cedo se nenhuma troca ocorrer.' },
+    // 4. ordem do código (lógica)
+    { type:'order', badge:'Ordene os passos', q:'Coloque os passos da lógica do Bubble Sort na ordem correta:',
+      items:['Decrementar n (janela menor)', 'Definir n = tamanho do array', 'Comparar valores[i] com valores[i+1]', 'Se fora de ordem: fazer o swap', 'Loop externo: enquanto n > 1', 'Loop interno: i de 0 até n-2'],
+      correct:['Definir n = tamanho do array','Loop externo: enquanto n > 1','Loop interno: i de 0 até n-2','Comparar valores[i] com valores[i+1]','Se fora de ordem: fazer o swap','Decrementar n (janela menor)'],
+      exp:'Esta é a receita completa. Memorize esta ordem — ela é a estrutura mental que você vai usar para escrever do zero.' },
+    // 5. mc sobre swap
+    { type:'mc', badge:'Código', q:'Para trocar dois elementos em Java sem perder nenhum valor, precisamos de:',
+      opts:['Dois loops aninhados','Uma variável auxiliar (aux)','Um array separado','O operador XOR (^)'],
+      correct:1, exp:'Sim! Sempre usamos uma variável auxiliar: aux = a[i]; a[i] = a[i+1]; a[i+1] = aux; Sem ela, um dos valores seria sobrescrito.' },
+    // 6. complete o código (inline blank)
+    { type:'fill', badge:'Complete o código', q:'Complete a condição de troca do Bubble Sort:',
+      codePre:'if (valores[i] ', blank:'>', codePos:' valores[i + 1]) {',
+      tokens:['<','<=','>=','>','==','!='], correct:'>', 
+      exp:'Usamos > para ordem crescente. Se o elemento atual for MAIOR que o próximo, eles estão fora de ordem e precisam ser trocados.' },
+    // 7. order código
+    { type:'order', badge:'Ordene o código', isCode:true, q:'Monte o bloco de swap na ordem correta:',
+      items:['valores[i + 1] = aux;','aux = valores[i];','int aux;','valores[i] = valores[i + 1];'],
+      correct:['int aux;','aux = valores[i];','valores[i] = valores[i + 1];','valores[i + 1] = aux;'],
+      exp:'O swap em 3 passos: salvar valores[i] em aux, copiar valores[i+1] para valores[i], e por fim colocar aux em valores[i+1].' },
+    // 8. mc condição while
+    { type:'mc', badge:'Código', q:'Qual é a condição correta do while no Bubble Sort implementado em aula?',
+      opts:['while (n >= 0)','while (n > 0)','while (n > 1)','while (i < n)'],
+      correct:2, exp:'while (n > 1) porque quando n chega a 1 sobrou apenas um elemento — não há vizinho para comparar. O array já está ordenado.' },
+    // 9. snippet: apontar erro
+    { type:'mc', badge:'Encontre o erro', q:'O que está errado neste trecho?',
+      codeSnippet:`for (int i = 0; i < n; i++) {\n  if (valores[i] > valores[i + 1]) {`,
+      opts:['A condição if está invertida','O loop vai até n mas deveria ir até n-1, causando ArrayIndexOutOfBoundsException','Falta o operador ++ em i','A variável n não foi declarada'],
+      correct:1, exp:'Com i < n, quando i = n-1 o código tenta acessar valores[n] que não existe! A condição correta é i < n - 1 (ou i < n-1).' },
+    // 10. fill — declaração
+    { type:'fill', badge:'Complete o código', q:'Complete a linha que salva o tamanho atual do array:',
+      codePre:'int n = valores.', blank:'length', codePos:';',
+      tokens:['size()','length','length()','count','size'],
+      correct:'length', exp:'Em Java, arrays têm a propriedade .length (sem parênteses!). Métodos como size() pertencem a coleções como ArrayList.' }
+  ],
+  blanks: {
+    code:`public void sort() {\n  int aux;\n  int n = valores.____;     // tamanho\n\n  while (n > ____) {\n    for (int i = 0; i < ____; i++) {\n      if (valores[i] > valores[____]) {\n        aux = valores[i];\n        valores[i] = valores[i + 1];\n        valores[i + 1] = ____;\n      }\n    }\n    ____--;\n  }\n}`,
+    tokens:['length','1','n - 1','i + 1','aux','n'],
+    answers:['length','1','n - 1','i + 1','aux','n']
+  },
+  recipe:['Definir n = valores.length','Loop externo: while (n > 1)','Loop interno: i de 0 até n-2','Comparar valores[i] com valores[i+1]','Se maior: swap com variável aux','Decrementar n--']
+},
+insertion: {
+  name: 'Insertion Sort',
+  tagline: 'Insere cada elemento na posição certa, como baralho de cartas',
+  concept: 'O Insertion Sort funciona como organizar cartas na mão. A cada iteração, você pega um elemento (chave) e o encaixa no lugar certo entre os elementos já ordenados à esquerda. Os elementos maiores são empurrados uma posição para a direita para abrir espaço.',
+  quizBank: [
+    { type:'mc', badge:'Conceito', q:'Qual é a analogia clássica do Insertion Sort?',
+      opts:['Peneira de areia','Organizar cartas de baralho na mão','Busca binária','Dividir e conquistar'],
+      correct:1, exp:'Exato! Você pega carta por carta e insere cada uma no lugar certo entre as que já estão ordenadas na sua mão.' },
+    { type:'tf', badge:'Verdadeiro ou Falso', q:'No Insertion Sort, o loop externo começa no índice 0.',
+      correct:false, exp:'Falso! Começa em i = 1, porque um único elemento (índice 0) já está trivialmente "ordenado". A chave pega o elemento da posição i.' },
+    { type:'tf', badge:'Verdadeiro ou Falso', q:'A variável "chave" no Insertion Sort guarda o valor do elemento que está sendo posicionado.',
+      correct:true, exp:'Correto! chave = valores[i] salva o elemento antes de começarmos a empurrar outros para a direita, para não perder o valor.' },
+    { type:'order', badge:'Ordene os passos', q:'Coloque os passos do Insertion Sort na ordem correta:',
+      items:['Enquanto j >= 0 E valores[j] > chave: empurrar valores[j] para valores[j+1]','Loop externo: i de 1 até o fim','Colocar chave em valores[j+1]','Salvar valores[i] em chave','Definir j = i - 1','Decrementar j'],
+      correct:['Loop externo: i de 1 até o fim','Salvar valores[i] em chave','Definir j = i - 1','Enquanto j >= 0 E valores[j] > chave: empurrar valores[j] para valores[j+1]','Decrementar j','Colocar chave em valores[j+1]'],
+      exp:'A chave é salva primeiro, depois abrimos espaço empurrando à direita, e por fim inserimos a chave no buraco criado.' },
+    { type:'mc', badge:'Código', q:'O que faz a linha "valores[j + 1] = valores[j]" no while interno?',
+      opts:['Faz o swap final','Empurra o elemento j uma posição para a direita, abrindo espaço para a chave','Copia o array para backup','Incrementa o índice j'],
+      correct:1, exp:'Estamos abrindo espaço! Empurramos valores[j] uma posição à direita. Fazemos isso repetidamente até achar onde a chave se encaixa.' },
+    { type:'fill', badge:'Complete o código', q:'Complete a inicialização de j no Insertion Sort:',
+      codePre:'j = i ', blank:'- 1', codePos:';  // começa pelo vizinho esquerdo',
+      tokens:['- 1','+ 1','- 2','* 2','/ 2'],
+      correct:'- 1', exp:'j começa em i - 1 porque queremos comparar a chave com o vizinho imediatamente à esquerda e depois continuar andando para a esquerda.' },
+    { type:'order', badge:'Ordene o código', isCode:true, q:'Monte o loop interno do Insertion Sort:',
+      items:['valores[j + 1] = chave;','chave = valores[i];','while (j >= 0 && valores[j] > chave) {','    valores[j + 1] = valores[j];','    j--;','}'],
+      correct:['chave = valores[i];','while (j >= 0 && valores[j] > chave) {','    valores[j + 1] = valores[j];','    j--;','}','valores[j + 1] = chave;'],
+      exp:'Salva a chave → while compara e empurra → j-- anda à esquerda → sai do while → insere chave no buraco.' },
+    { type:'mc', badge:'Código', q:'Por que a condição do while tem DUAS partes: "j >= 0 && valores[j] > chave"?',
+      opts:['A segunda parte é redundante','j >= 0 evita acessar índice negativo; valores[j] > chave verifica se ainda precisa empurrar','Só para melhorar a legibilidade','A primeira parte poderia ser removida'],
+      correct:1, exp:'Ambas são essenciais! j >= 0 é uma guarda de limite (sem ela, valores[-1] causaria erro). valores[j] > chave é a condição de parada lógica.' },
+    { type:'mc', badge:'Encontre o erro', q:'Qual erro existe neste código?',
+      codeSnippet:`for (int i = 0; i < valores.length; i++) {\n  chave = valores[i];\n  j = i - 1;\n  ...`,
+      opts:['O loop deveria ir até length - 1','O loop deveria começar em i = 1, não i = 0','j deveria ser i + 1','chave deveria ser declarada dentro do loop'],
+      correct:1, exp:'Começando em i = 0, j = -1 e o while tentaria acessar valores[-1] na primeira iteração. O loop externo sempre começa em i = 1.' },
+    { type:'fill', badge:'Complete o código', q:'Complete a inserção final da chave:',
+      codePre:'valores[j ', blank:'+ 1', codePos:'] = chave;',
+      tokens:['+ 1','- 1','+ 0','* 1'],
+      correct:'+ 1', exp:'Usamos j + 1 porque após o while, j aponta para o último elemento que NÃO foi deslocado. A posição vazia (o "buraco") está em j + 1.' }
+  ],
+  blanks: {
+    code:`public void sort() {\n  int chave, j;\n\n  for (int i = ____; i < valores.length; i++) {\n    chave = valores[____];\n    j = i - ____;\n\n    while (j >= 0 && valores[j] > ____) {\n      valores[j + 1] = valores[____];\n      ____--;\n    }\n\n    valores[j + 1] = ____;\n  }\n}`,
+    tokens:['1','i','1','chave','j','j','chave'],
+    answers:['1','i','1','chave','j','j','chave']
+  },
+  recipe:['Loop externo: i de 1 até o fim','Salvar chave = valores[i]','Definir j = i - 1','While: j >= 0 E valores[j] > chave','Empurrar: valores[j+1] = valores[j]; j--','Inserir: valores[j+1] = chave']
+},
+selection: {
+  name: 'Selection Sort',
+  tagline: 'Seleciona o menor de cada vez e coloca no lugar certo',
+  concept: 'O Selection Sort divide o array em dois: a parte ordenada (esquerda) e a desordenada (direita). A cada iteração, busca o menor elemento na parte desordenada e o coloca no final da parte ordenada. Como pescar o menor peixe do lago repetidamente.',
+  quizBank: [
+    { type:'mc', badge:'Conceito', q:'O Selection Sort faz quantas comparações para um array de n elementos?',
+      opts:['n comparações no total','n² / 2 comparações (O(n²))','n log n comparações','n - 1 comparações'],
+      correct:1, exp:'O Selection Sort sempre faz O(n²) comparações, mesmo que o array já esteja ordenado — esta é uma desvantagem em relação ao Insertion Sort.' },
+    { type:'tf', badge:'Verdadeiro ou Falso', q:'No Selection Sort, a variável "pos" guarda o valor do elemento mínimo.',
+      correct:false, exp:'Falso! "pos" guarda o ÍNDICE (posição) do mínimo. "min" guarda o valor. Precisamos do índice para fazer o swap corretamente.' },
+    { type:'tf', badge:'Verdadeiro ou Falso', q:'Após cada iteração do loop externo no Selection Sort, a parte esquerda do array está ordenada.',
+      correct:true, exp:'Correto! A cada iteração, o menor elemento da parte desordenada vai para a última posição da parte ordenada, expandindo-a em 1.' },
+    { type:'order', badge:'Ordene os passos', q:'Coloque os passos do Selection Sort na ordem correta:',
+      items:['Trocar valores[pos] com valores[i]','Loop interno: j de i+1 até o fim','Assumir valores[i] como mínimo; pos = i','Loop externo: i de 0 até length-2','Se valores[j] < min: atualizar min e pos'],
+      correct:['Loop externo: i de 0 até length-2','Assumir valores[i] como mínimo; pos = i','Loop interno: j de i+1 até o fim','Se valores[j] < min: atualizar min e pos','Trocar valores[pos] com valores[i]'],
+      exp:'O loop externo define a posição de destino. O interno busca o mínimo. No final, o swap coloca o mínimo no lugar certo.' },
+    { type:'mc', badge:'Código', q:'Por que o loop externo vai até "valores.length - 1" e não até "valores.length"?',
+      opts:['Para evitar divisão por zero','O último elemento já estará no lugar após todos os anteriores serem ordenados','É uma convenção do Java','Para economizar memória'],
+      correct:1, exp:'Quando chegamos ao penúltimo elemento, o último já está automaticamente na posição correta. Processar o último seria uma iteração inútil.' },
+    { type:'fill', badge:'Complete o código', q:'Complete a condição do if no loop interno:',
+      codePre:'if (valores[j] ', blank:'<', codePos:' min) {',
+      tokens:['>','<','>=','<=','=='],
+      correct:'<', exp:'Usamos < porque queremos encontrar o MÍNIMO. Se valores[j] for menor que o mínimo atual, encontramos um novo candidato.' },
+    { type:'order', badge:'Ordene o código', isCode:true, q:'Monte o swap do Selection Sort:',
+      items:['valores[i] = min;','int min = valores[i];','valores[pos] = valores[i];','// ... loop buscando mínimo ...'],
+      correct:['int min = valores[i];','// ... loop buscando mínimo ...','valores[pos] = valores[i];','valores[i] = min;'],
+      exp:'Aqui o swap usa min diretamente como auxiliar! min já tem o valor do mínimo salvo, então: sobrescreve valores[pos] com valores[i], e coloca min em valores[i].' },
+    { type:'mc', badge:'Código', q:'No Selection Sort em aula, o swap usa qual variável como auxiliar?',
+      opts:['Uma variável aux separada','A própria variável min, que já tem o valor salvo','Um array temporário','Não há variável auxiliar, é um swap direto'],
+      correct:1, exp:'Elegante! Como min já salvou o valor mínimo no início da iteração, usamos ele diretamente: valores[pos] = valores[i]; valores[i] = min;' },
+    { type:'mc', badge:'Encontre o erro', q:'Qual erro existe neste trecho?',
+      codeSnippet:`for (int i = 0; i < valores.length - 1; i++) {\n  min = valores[i];\n  pos = 0;  // <- aqui\n  for (int j = i + 1; ...)`,
+      opts:['O loop externo tem condição errada','pos deveria começar em i, não em 0, pois o mínimo deve ser buscado apenas na parte não ordenada','min deveria ser int.MAX_VALUE','Falta declarar j fora do loop'],
+      correct:1, exp:'pos = 0 é um bug clássico! Se o mínimo estiver em i=3 mas pos=0, o swap vai bagunçar a parte já ordenada. Sempre pos = i.' },
+    { type:'fill', badge:'Complete o código', q:'Complete a atualização de pos quando um novo mínimo é encontrado:',
+      codePre:'min = valores[j];\npos = ', blank:'j', codePos:';',
+      tokens:['j','i','j - 1','j + 1','0'],
+      correct:'j', exp:'pos = j porque j é o índice onde encontramos o novo mínimo. Precisamos guardar o índice para fazer o swap no final do loop externo.' }
+  ],
+  blanks: {
+    code:`public void sort() {\n  int min, pos;\n\n  for (int i = 0; i < valores.length - ____; i++) {\n    min = valores[____];\n    pos = ____;\n\n    for (int j = ____ + 1; j < valores.length; j++) {\n      if (valores[j] < ____) {\n        min = valores[j];\n        pos = ____;\n      }\n    }\n\n    valores[____] = valores[i];\n    valores[i] = ____;\n  }\n}`,
+    tokens:['1','i','i','i','min','j','pos','min'],
+    answers:['1','i','i','i','min','j','pos','min']
+  },
+  recipe:['Loop externo: i de 0 até length-2','Assumir min = valores[i] e pos = i','Loop interno: j de i+1 até o fim','Se valores[j] < min: min = valores[j]; pos = j','Swap: valores[pos] = valores[i]; valores[i] = min']
+}
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let currentAlgo = 'bubble';
+let currentStage = 0;
+let stagesDone = [false, false, false, false];
+let xp = 0, hearts = 3;
+
+// viz
+let vizSteps = [], vizStep = 0, vizPlaying = false, vizTimer = null;
+
+// quiz
+let quizQueue = [], quizIndex = 0, quizResults = [];
+let selToken = null, blankAnswer = null;
+let orderDragSrc = null;
+let orderCurrent = [];
+
+// blanks stage
+let fullBlankAnswers = [], fullSelToken = null;
+
+// ═══════════════════════════════════════════════════════
+// ALGO SELECT
+// ═══════════════════════════════════════════════════════
+function selectAlgo(algo, evt) {
+  currentAlgo = algo;
+  stagesDone = [false,false,false,false];
+  currentStage = 0;
+  resetQuizState();
+  document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
+  if (evt && evt.target) evt.target.classList.add('active');
+  renderTabs(); renderStage();
+}
+function resetQuizState() {
+  quizQueue = []; quizIndex = 0; quizResults = [];
+  selToken = null; blankAnswer = null;
+  orderDragSrc = null; orderCurrent = [];
+  fullBlankAnswers = []; fullSelToken = null;
+}
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function renderTabs() {
+  const labels = [['👁️','ver'],['🧩','quiz'],['🔧','código'],['🏆','receita']];
+  document.getElementById('stageTabs').innerHTML = labels.map(([ic,lb],i) => {
+    const unlocked = i === 0 || stagesDone[i-1];
+    const done = stagesDone[i], active = i === currentStage;
+    let cls = 'stage-tab' + (done?' done':active?' active':unlocked?' unlocked':' locked');
+    return `<div class="${cls}" onclick="goStage(${i})"><span class="stnum">${done?'✅':ic}</span><span>${lb}</span></div>`;
+  }).join('');
+}
+function goStage(i) {
+  if (i !== 0 && !stagesDone[i-1]) return;
+  currentStage = i; resetQuizState();
+  renderTabs(); renderStage();
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE ROUTER
+// ═══════════════════════════════════════════════════════
+function renderStage() {
+  const el = document.getElementById('stageContent');
+  const c = ALGOS[currentAlgo];
+  if (currentStage === 0) { el.innerHTML = buildVizHTML(c); initViz(); }
+  else if (currentStage === 1) { buildQuizQueue(); el.innerHTML = buildQuizHTML(); }
+  else if (currentStage === 2) { el.innerHTML = buildBlanksHTML(c); }
+  else if (currentStage === 3) { el.innerHTML = buildRecipeHTML(c); }
+}
+function completeStage(i) {
+  stagesDone[i] = true;
+  if (i < 3) { currentStage = i+1; resetQuizState(); }
+  else { showCelebrate(); return; }
+  renderTabs(); renderStage();
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 0 — VIZ
+// ═══════════════════════════════════════════════════════
+function buildVizHTML(c) {
+  return `<div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+      <span class="stage-title">${c.name}</span>
+      <span style="font-size:12px;background:#EEEDFE;color:#534AB7;padding:2px 10px;border-radius:12px;font-weight:500;">${c.tagline}</span>
+    </div>
+    <p class="stage-sub">${c.concept}</p>
+    <div class="viz-row" id="vizBars"></div>
+    <div style="font-size:12px;color:var(--color-text-secondary);min-height:18px;margin:4px 0 8px;" id="vizLabel"></div>
+    <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+      ${[['#AFA9EC','#3C3489','normal'],['#FAC775','#633806','comparando'],['#F09595','#501313','trocando'],['#5DCAA5','#04342C','ordenado']].map(([bg,c,lb])=>`<span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:${bg};display:inline-block"></span>${lb}</span>`).join('')}
+    </div>
+    <div class="viz-controls">
+      <button onclick="vizPrev()">← Anterior</button>
+      <button onclick="vizToggle()" id="playBtn">▶ Play</button>
+      <button onclick="vizNext()">Próximo →</button>
+      <div class="speed-wrap">vel <input type="range" min="1" max="5" value="3" id="speedSlider" style="width:60px;"></div>
+      <span class="step-counter" id="stepCnt"></span>
+    </div>
+  </div>
+  <button class="next-btn" onclick="completeStage(0)">Entendi! Próxima fase →</button>`;
+}
+function buildBubbleSteps(a){ const s=[],arr=[...a];let n=arr.length;s.push({arr:[...arr],c:[],sw:[],so:[],lbl:'Array inicial'});while(n>1){for(let i=0;i<n-1;i++){const sorted=arr.slice(n).map((_,k)=>arr.length-n+k);s.push({arr:[...arr],c:[i,i+1],sw:[],so:Array.from({length:arr.length-n},(_,k)=>arr.length-1-k),lbl:`Comparando pos ${i} (${arr[i]}) e ${i+1} (${arr[i+1]})`});if(arr[i]>arr[i+1]){[arr[i],arr[i+1]]=[arr[i+1],arr[i]];s.push({arr:[...arr],c:[],sw:[i,i+1],so:Array.from({length:arr.length-n},(_,k)=>arr.length-1-k),lbl:`Troca! ${arr[i+1]} > ${arr[i]}`});}}n--;}s.push({arr:[...arr],c:[],sw:[],so:arr.map((_,k)=>k),lbl:'✅ Ordenado!'});return s;}
+function buildInsertionSteps(a){const s=[],arr=[...a];s.push({arr:[...arr],c:[],sw:[],so:[0],lbl:'Pos 0 já está ordenada'});for(let i=1;i<arr.length;i++){let key=arr[i],j=i-1;s.push({arr:[...arr],c:[i],sw:[],so:Array.from({length:i},(_,k)=>k),lbl:`Chave = ${key} (pos ${i})`});while(j>=0&&arr[j]>key){arr[j+1]=arr[j];s.push({arr:[...arr],c:[j,j+1],sw:[j+1],so:Array.from({length:i},(_,k)=>k),lbl:`${arr[j+1]} > ${key}, empurra direita`});j--;}arr[j+1]=key;s.push({arr:[...arr],c:[],sw:[j+1],so:Array.from({length:i+1},(_,k)=>k),lbl:`Insere ${key} na pos ${j+1}`});}s.push({arr:[...arr],c:[],sw:[],so:arr.map((_,k)=>k),lbl:'✅ Ordenado!'});return s;}
+function buildSelectionSteps(a){const s=[],arr=[...a];s.push({arr:[...arr],c:[],sw:[],so:[],lbl:'Array inicial'});for(let i=0;i<arr.length-1;i++){let min=arr[i],pos=i;s.push({arr:[...arr],c:[i],sw:[],so:Array.from({length:i},(_,k)=>k),lbl:`Buscando mínimo a partir de ${i}`});for(let j=i+1;j<arr.length;j++){s.push({arr:[...arr],c:[j,pos],sw:[],so:Array.from({length:i},(_,k)=>k),lbl:`${arr[j]} vs mínimo ${min}`});if(arr[j]<min){min=arr[j];pos=j;s.push({arr:[...arr],c:[pos],sw:[],so:Array.from({length:i},(_,k)=>k),lbl:`Novo mínimo: ${min} na pos ${pos}`});}}[arr[i],arr[pos]]=[arr[pos],arr[i]];s.push({arr:[...arr],c:[],sw:[i,pos],so:Array.from({length:i+1},(_,k)=>k),lbl:`Swap: ${min} vai para pos ${i}`});}s.push({arr:[...arr],c:[],sw:[],so:arr.map((_,k)=>k),lbl:'✅ Ordenado!'});return s;}
+function initViz(){const base=[64,34,25,12,22,11,90];const fn={bubble:buildBubbleSteps,insertion:buildInsertionSteps,selection:buildSelectionSteps};vizSteps=fn[currentAlgo](base);vizStep=0;drawViz();}
+function drawViz(){const s=vizSteps[vizStep];if(!s)return;const bars=document.getElementById('vizBars');if(!bars)return;const mx=Math.max(...s.arr);bars.innerHTML=s.arr.map((v,i)=>{let cls='bar';if(s.so&&s.so.includes(i))cls+=' sorted';else if(s.sw&&s.sw.includes(i))cls+=' swapping';else if(s.c&&s.c.includes(i))cls+=' comparing';return`<div class="${cls}" style="height:${Math.max(24,Math.round(v/mx*120))}px">${v}</div>`;}).join('');const lbl=document.getElementById('vizLabel');if(lbl)lbl.textContent=s.lbl||'';const cnt=document.getElementById('stepCnt');if(cnt)cnt.textContent=`passo ${vizStep+1}/${vizSteps.length}`;}
+function vizNext(){if(vizStep<vizSteps.length-1){vizStep++;drawViz();}}
+function vizPrev(){if(vizStep>0){vizStep--;drawViz();}}
+function vizToggle(){vizPlaying=!vizPlaying;const b=document.getElementById('playBtn');if(b)b.textContent=vizPlaying?'⏸ Pause':'▶ Play';if(vizPlaying)vizAuto();else clearTimeout(vizTimer);}
+function vizAuto(){if(!vizPlaying)return;if(vizStep>=vizSteps.length-1){vizPlaying=false;const b=document.getElementById('playBtn');if(b)b.textContent='▶ Play';return;}vizNext();const sp=document.getElementById('speedSlider');vizTimer=setTimeout(vizAuto,(6-(sp?+sp.value:3))*250);}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 1 — QUIZ (10 perguntas, formatos variados)
+// ═══════════════════════════════════════════════════════
+function buildQuizQueue(){
+  const bank = ALGOS[currentAlgo].quizBank;
+  quizQueue = [...bank].sort(()=>Math.random()-.5).slice(0,10);
+  quizIndex = 0; quizResults = [];
+}
+function buildQuizHTML(){
+  const q = quizQueue[quizIndex];
+  const prog = quizQueue.map((_,i)=>`<div class="qp-dot ${i<quizIndex?'done-ok':i===quizIndex?'current':''}"></div>`).join('');
+  let body = '';
+  if (q.type==='mc') body = buildMC(q);
+  else if (q.type==='tf') body = buildTF(q);
+  else if (q.type==='order') body = buildOrder(q);
+  else if (q.type==='fill') body = buildFill(q);
+  return `<div class="card">
+    <div class="quiz-prog">${prog}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span class="q-type-badge qt-${q.type==='mc'?'mc':q.type==='tf'?'tf':q.type==='order'?'ord':'fill'}">${q.badge}</span>
+      <span style="font-size:12px;color:var(--color-text-tertiary);">${quizIndex+1} / ${quizQueue.length}</span>
+    </div>
+    <p class="q-text">${q.q}</p>
+    ${body}
+    <div id="qFeedback"></div>
+  </div>
+  <button class="next-btn" id="qNextBtn" style="display:none" onclick="nextQuestion()">Continuar →</button>`;
+}
+
+function buildMC(q){
+  const code = q.codeSnippet ? `<div class="code-snippet">${q.codeSnippet}</div>` : '';
+  const isCode = q.opts.some(o => o.includes('(')||o.includes('.')||o.includes(';'));
+  return `${code}<div class="opts-grid ${q.opts.length<=2?'single':''}">
+    ${q.opts.map((o,i)=>`<button class="opt-btn ${isCode?'code-opt':''}" onclick="answerMC(${i})">${o}</button>`).join('')}
+  </div>`;
+}
+function buildTF(q){
+  return `<div class="tf-row">
+    <button class="tf-btn" onclick="answerTF(true)">✅ Verdadeiro</button>
+    <button class="tf-btn" onclick="answerTF(false)">❌ Falso</button>
+  </div>`;
+}
+function buildOrder(q){
+  const isCode = q.isCode;
+  const shuffled = [...q.items].sort(()=>Math.random()-.5);
+  orderCurrent = [...shuffled];
+  return `<div class="order-list" id="orderList">
+    ${shuffled.map((item,i)=>`<div class="order-item ${isCode?'code-item':''}" id="oi_${i}" draggable="true" data-text="${item.replace(/"/g,'&quot;')}"
+      ondragstart="odStart(event)" ondragover="odOver(event)" ondrop="odDrop(event)">
+      <span class="drag-handle" aria-hidden="true">⠿</span>
+      <span class="order-num" id="onum_${i}">${i+1}</span>
+      <span>${item}</span>
+    </div>`).join('')}
+  </div>
+  <button style="margin-top:10px;padding:8px 20px;border-radius:var(--border-radius-md);border:1.5px solid var(--color-border-secondary);background:var(--color-background-secondary);cursor:pointer;font-size:13px;font-family:inherit;color:var(--color-text-primary);" onclick="checkOrder()">Verificar ordem</button>`;
+}
+function buildFill(q){
+  selToken = null; blankAnswer = null;
+  return `<div class="inline-code" id="fillCode">${q.codePre}<span class="inline-blank" id="theBlank" onclick="clickBlank()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>${q.codePos}</div>
+  <div class="token-bank">
+    ${q.tokens.map((t,i)=>`<div class="token" id="ft_${i}" data-val="${t}" onclick="pickToken('ft_${i}','${t}')">${t}</div>`).join('')}
+  </div>`;
+}
+
+// MC answer
+function answerMC(i){
+  const q = quizQueue[quizIndex];
+  document.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
+  document.querySelectorAll('.opt-btn')[i].classList.add(i===q.correct?'correct':'wrong');
+  if(i!==q.correct) document.querySelectorAll('.opt-btn')[q.correct].classList.add('correct');
+  showFeedback(i===q.correct, q.exp);
+}
+// TF answer
+function answerTF(val){
+  const q = quizQueue[quizIndex];
+  document.querySelectorAll('.tf-btn').forEach(b=>b.disabled=true);
+  const ok = val===q.correct;
+  document.querySelectorAll('.tf-btn').forEach(b=>{
+    if((b.textContent.includes('Verdadeiro')&&q.correct)||(b.textContent.includes('Falso')&&!q.correct)) b.classList.add('correct');
+    else if((b.textContent.includes('Verdadeiro')&&val===true&&!ok)||(b.textContent.includes('Falso')&&val===false&&!ok)) b.classList.add('wrong');
+  });
+  showFeedback(ok, q.exp);
+}
+// Order
+let odSrc = null;
+function odStart(e){odSrc=e.currentTarget;e.currentTarget.style.opacity='.4';}
+function odOver(e){e.preventDefault();}
+function odDrop(e){
+  e.preventDefault();
+  const tgt = e.currentTarget;
+  if(!odSrc||odSrc===tgt){if(odSrc)odSrc.style.opacity='1';return;}
+  const list = document.getElementById('orderList');
+  const items = [...list.querySelectorAll('.order-item')];
+  const si=items.indexOf(odSrc),ti=items.indexOf(tgt);
+  if(si<ti)list.insertBefore(odSrc,tgt.nextSibling);else list.insertBefore(odSrc,tgt);
+  odSrc.style.opacity='1';
+  list.querySelectorAll('.order-item').forEach((el,i)=>{const n=el.querySelector('.order-num');if(n)n.textContent=i+1;});
+}
+function checkOrder(){
+  const q = quizQueue[quizIndex];
+  const list = document.getElementById('orderList');
+  const items = [...list.querySelectorAll('.order-item')];
+  const order = items.map(el=>el.dataset.text);
+  const ok = JSON.stringify(order)===JSON.stringify(q.correct);
+  items.forEach((el,i)=>{
+    el.classList.remove('correct-pos','wrong-pos');
+    el.classList.add(el.dataset.text===q.correct[i]?'correct-pos':'wrong-pos');
+  });
+  showFeedback(ok, q.exp);
+}
+// Fill token
+function pickToken(id, val){
+  document.querySelectorAll('.token').forEach(t=>t.classList.remove('sel'));
+  if(selToken&&selToken.id===id){selToken=null;return;}
+  selToken={id,val};
+  document.getElementById(id).classList.add('sel');
+}
+function clickBlank(){
+  if(!selToken)return;
+  const q = quizQueue[quizIndex];
+  const blank = document.getElementById('theBlank');
+  blank.textContent = selToken.val;
+  const ok = selToken.val === q.correct;
+  blank.className = 'inline-blank '+(ok?'ok':'err');
+  document.getElementById(selToken.id).classList.remove('sel');
+  document.querySelectorAll('.token').forEach(t=>t.disabled=true);
+  showFeedback(ok, q.exp);
+}
+function showFeedback(ok, exp){
+  if(ok) addXP(15); else loseHeart();
+  quizResults.push(ok);
+  document.getElementById('qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'err'}">${ok?'✅':'❌'} ${exp}</div>`;
+  const nb = document.getElementById('qNextBtn');
+  if(nb) nb.style.display='block';
+}
+function nextQuestion(){
+  quizIndex++;
+  if(quizIndex >= quizQueue.length){ completeStage(1); return; }
+  selToken=null; blankAnswer=null; odSrc=null; orderCurrent=[];
+  document.getElementById('stageContent').innerHTML = buildQuizHTML();
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 2 — FULL CODE BLANKS
+// ═══════════════════════════════════════════════════════
+function buildBlanksHTML(c){
+  const b = c.blanks;
+  fullBlankAnswers = new Array(b.answers.length).fill(null);
+  let si=0;
+  const codeHtml = b.code.replace(/____/g,()=>{
+    const i=si++;
+    return `<span class="blank" id="fb_${i}" data-i="${i}" onclick="clickFullBlank(${i})">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
+  });
+  const shuffled = [...b.tokens].sort(()=>Math.random()-.5);
+  return `<div class="card">
+    <div class="stage-title" style="margin-bottom:4px;">Complete o método sort()</div>
+    <p class="stage-sub">Clique em um token, depois clique no espaço. Desta vez é o método completo.</p>
+    <div class="full-code" id="fullCode">${codeHtml}</div>
+    <div class="token-bank" id="fullBank">
+      ${shuffled.map((t,i)=>`<div class="token" id="fbt_${i}" data-val="${t}" onclick="pickFullToken('fbt_${i}','${t}')">${t}</div>`).join('')}
+    </div>
+    <div id="fullFeedback" style="margin-top:10px;"></div>
+  </div>
+  <button class="next-btn" id="fullCheckBtn" onclick="checkFullBlanks()">Verificar respostas</button>`;
+}
+function pickFullToken(id,val){
+  document.querySelectorAll('#fullBank .token').forEach(t=>t.classList.remove('sel'));
+  if(fullSelToken&&fullSelToken.id===id){fullSelToken=null;return;}
+  fullSelToken={id,val};
+  document.getElementById(id).classList.add('sel');
+}
+function clickFullBlank(i){
+  if(!fullSelToken)return;
+  fullBlankAnswers[i]=fullSelToken.val;
+  const slot=document.getElementById(`fb_${i}`);
+  slot.textContent=fullSelToken.val;
+  slot.className='blank';
+  document.getElementById(fullSelToken.id).classList.add('used');
+  document.getElementById(fullSelToken.id).classList.remove('sel');
+  fullSelToken=null;
+}
+function checkFullBlanks(){
+  const c=ALGOS[currentAlgo];
+  let ok=true;
+  fullBlankAnswers.forEach((ans,i)=>{
+    const slot=document.getElementById(`fb_${i}`);
+    if(!slot)return;
+    const correct=ans===c.blanks.answers[i];
+    slot.className='blank '+(correct?'ok':'err');
+    if(!correct)ok=false;
+  });
+  const fb=document.getElementById('fullFeedback');
+  if(ok){
+    fb.innerHTML=`<div class="feedback ok">✅ Perfeito! Código completo e correto.</div>`;
+    addXP(50);
+    const btn=document.getElementById('fullCheckBtn');
+    if(btn){btn.textContent='Próxima fase →';btn.onclick=()=>completeStage(2);}
+  } else {
+    fb.innerHTML=`<div class="feedback err">❌ Alguns espaços incorretos. Tokens liberados para tentar de novo.</div>`;
+    loseHeart();
+    document.querySelectorAll('#fullBank .token').forEach(t=>t.classList.remove('used'));
+    fullBlankAnswers=new Array(c.blanks.answers.length).fill(null);
+    fullSelToken=null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 3 — RECIPE
+// ═══════════════════════════════════════════════════════
+let recDragSrc=null;
+function buildRecipeHTML(c){
+  const shuffled=[...c.recipe].sort(()=>Math.random()-.5);
+  return `<div class="card">
+    <div class="stage-title" style="margin-bottom:4px;">Monte a receita</div>
+    <p class="stage-sub">Arraste para colocar na ordem certa. Esta lógica é o que você carregará na cabeça para sempre — sem precisar do código.</p>
+    <div id="recipeList">
+      ${shuffled.map((s,i)=>`<div class="logic-step" draggable="true" data-text="${s.replace(/"/g,'&quot;')}" id="rs_${i}"
+        ondragstart="rdStart(event)" ondragover="rdOver(event)" ondrop="rdDrop(event)">
+        <div class="step-num">${i+1}</div>
+        <div class="step-text">${s}</div>
+      </div>`).join('')}
+    </div>
+    <div id="recipeFeedback" style="margin-top:10px;"></div>
+  </div>
+  <button class="next-btn" onclick="checkRecipe()">Verificar ordem</button>`;
+}
+function rdStart(e){recDragSrc=e.currentTarget;e.currentTarget.style.opacity='.4';}
+function rdOver(e){e.preventDefault();}
+function rdDrop(e){
+  e.preventDefault();
+  const tgt=e.currentTarget;
+  if(!recDragSrc||recDragSrc===tgt){if(recDragSrc)recDragSrc.style.opacity='1';return;}
+  const list=document.getElementById('recipeList');
+  const items=[...list.querySelectorAll('.logic-step')];
+  const si=items.indexOf(recDragSrc),ti=items.indexOf(tgt);
+  if(si<ti)list.insertBefore(recDragSrc,tgt.nextSibling);else list.insertBefore(recDragSrc,tgt);
+  recDragSrc.style.opacity='1';
+  list.querySelectorAll('.logic-step').forEach((el,i)=>{const n=el.querySelector('.step-num');if(n)n.textContent=i+1;});
+}
+function checkRecipe(){
+  const c=ALGOS[currentAlgo];
+  const items=[...document.querySelectorAll('#recipeList .logic-step')];
+  const order=items.map(el=>el.dataset.text);
+  const ok=JSON.stringify(order)===JSON.stringify(c.recipe);
+  const fb=document.getElementById('recipeFeedback');
+  if(ok){
+    addXP(60);
+    fb.innerHTML=`<div class="feedback ok">🏆 Receita memorizada!</div>`;
+    setTimeout(()=>completeStage(3),1200);
+  } else {
+    loseHeart();
+    fb.innerHTML=`<div class="feedback err">❌ Ordem incorreta. Tente de novo!</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CELEBRATE
+// ═══════════════════════════════════════════════════════
+function showCelebrate(){
+  const c=ALGOS[currentAlgo];
+  const correct=quizResults.filter(Boolean).length;
+  document.getElementById('stageContent').innerHTML=`<div class="card celebrate">
+    <div class="big">🏆</div>
+    <h2>${c.name} dominado!</h2>
+    <p>Você passou pela visualização, 10 perguntas variadas, completou o código e montou a receita.<br>Agora você consegue escrever isso sozinho.</p>
+    <div class="score-row">
+      <div class="score-item"><div class="score-num">${correct}/10</div><div class="score-lbl">questões certas</div></div>
+      <div class="score-item"><div class="score-num">${xp}</div><div class="score-lbl">XP ganho</div></div>
+      <div class="score-item"><div class="score-num">${hearts}</div><div class="score-lbl">vidas restantes</div></div>
+    </div>
+    <button class="next-btn" style="max-width:280px;margin:0 auto;" onclick="sendPrompt('Quero praticar ${c.name} do zero, me dê um exercício para implementar')">Praticar do zero ↗</button>
+  </div>`;
+  renderTabs();
+}
+
+// ═══════════════════════════════════════════════════════
+// XP & HEARTS
+// ═══════════════════════════════════════════════════════
+function addXP(n){
+  xp+=n;
+  const bar=document.getElementById('xpBar');
+  const lbl=document.getElementById('xpLabel');
+  if(bar)bar.style.width=Math.min(100,(xp/300)*100)+'%';
+  if(lbl)lbl.textContent=xp+' XP';
+}
+function loseHeart(){
+  hearts=Math.max(0,hearts-1);
+  const el=document.getElementById('heartsEl');
+  if(el)el.textContent='❤️'.repeat(hearts)+'🖤'.repeat(3-hearts);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+renderTabs();
+renderStage();
+</script>

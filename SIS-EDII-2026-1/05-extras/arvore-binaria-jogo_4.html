@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construindo a Árvore Binária</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #f78166;
+    --accent4: #d2a8ff;
+    --accent5: #ffa657;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --correct-bg: #0f2a1a;
+    --wrong: #da3633;
+    --wrong-bg: #2a0f0f;
+    --glow: 0 0 20px rgba(88,166,255,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  .app { display: grid; grid-template-columns: 320px 1fr; grid-template-rows: 60px 1fr; height: 100vh; }
+
+  header {
+    grid-column: 1 / -1; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 20px; gap: 14px;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent);
+    background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.25);
+    padding: 3px 9px; border-radius: 4px; flex-shrink: 0;
+  }
+  header h1 { font-size: 14px; font-weight: 600; color: var(--text); }
+  .progress-wrap { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .progress-bar { width: 160px; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent4)); border-radius: 3px; transition: width 0.5s ease; }
+  .progress-label { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; min-width: 40px; text-align: right; }
+
+  .timeline-panel { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; }
+  .timeline-title { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; padding-left: 6px; }
+  .tl-item { display: flex; gap: 10px; padding-bottom: 16px; opacity: 0; transform: translateX(-8px); transition: opacity 0.4s ease, transform 0.4s ease; }
+  .tl-item.vis { opacity: 1; transform: translateX(0); }
+  .tl-line { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .tl-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; border: 2px solid var(--border); background: var(--surface2); color: var(--text3); flex-shrink: 0; }
+  .tl-dot.done { border-color: var(--accent2); background: rgba(63,185,80,0.15); color: var(--accent2); }
+  .tl-conn { width: 2px; flex: 1; min-height: 12px; background: var(--border); margin-top: 3px; }
+  .tl-conn.done { background: var(--accent2); }
+  .tl-body { flex: 1; padding-top: 3px; }
+  .tl-tag { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; display: inline-block; margin-bottom: 3px; }
+  .tag-classe     { background: rgba(210,168,255,0.15); color: var(--accent4); }
+  .tag-atributo   { background: rgba(255,166,87,0.15);  color: var(--accent5); }
+  .tag-construtor { background: rgba(88,166,255,0.15);  color: var(--accent);  }
+  .tag-metodo     { background: rgba(63,185,80,0.15);   color: var(--accent2); }
+  .tag-teste      { background: rgba(247,129,102,0.15); color: var(--accent3); }
+  .tl-name { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .tl-why  { font-size: 10px; color: var(--text2); line-height: 1.5; }
+
+  .game-panel { display: flex; flex-direction: column; overflow: hidden; }
+  .code-area { flex: 1; overflow-y: auto; padding: 16px 20px; background: var(--bg); }
+  .code-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+  .code-hdr { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 7px 14px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+  .cdot { width: 9px; height: 9px; border-radius: 50%; }
+  .cdot.r{background:#ff5f57} .cdot.y{background:#febc2e} .cdot.g{background:#28c840}
+  pre { padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.75; color: var(--text); white-space: pre; overflow-x: auto; }
+  .kw {color:#ff7b72} .cl{color:var(--accent4)} .cm{color:var(--text3);font-style:italic}
+  .str{color:#a5d6ff} .num{color:var(--accent5)} .fn{color:var(--accent2)} .tp{color:#79c0ff}
+  .seg { display: none; }
+  .seg.rev { display: block; animation: slideIn 0.5s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  .bottom-area { border-top: 1px solid var(--border); background: var(--surface); padding: 18px 22px; overflow-y: auto; max-height: 54vh; }
+
+  /* FASE ENSINO */
+  .teach-phase { display: flex; flex-direction: column; gap: 13px; }
+  .teach-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent5); background: rgba(255,166,87,0.12); border: 1px solid rgba(255,166,87,0.25); padding: 3px 10px; border-radius: 20px; width: fit-content; }
+  .teach-title { font-size: 17px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .teach-body  { font-size: 13px; color: var(--text2); line-height: 1.75; }
+  .teach-body strong { color: var(--text); font-weight: 600; }
+  .analogy-box { background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.2); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 12.5px; color: var(--text2); line-height: 1.65; }
+  .analogy-box strong { color: var(--accent); }
+  .ready-btn { align-self: flex-start; background: var(--accent); color: #000; border: none; border-radius: 7px; padding: 9px 22px; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; margin-top: 4px; }
+  .ready-btn:hover { opacity: 0.85; }
+
+  /* FASE PERGUNTA */
+  .ask-phase { display: none; flex-direction: column; gap: 10px; }
+  .ask-phase.show { display: flex; animation: fadeIn 0.35s ease; }
+  .ask-step { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); }
+  .ask-text  { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.4; }
+  .ask-sub   { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opt-btn { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 7px; padding: 10px 14px; cursor: pointer; text-align: left; transition: all 0.18s ease; font-family: 'Sora', sans-serif; color: var(--text); }
+  .opt-btn:hover { border-color: var(--accent); background: rgba(88,166,255,0.07); box-shadow: var(--glow); }
+  .opt-btn .ol { font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 2px; }
+  .opt-btn .od { font-size: 11px; color: var(--text2); line-height: 1.4; }
+  .opt-btn.correct { border-color: var(--accent2); background: var(--correct-bg); animation: pulseG 0.4s ease; }
+  .opt-btn.wrong   { border-color: var(--wrong);    background: var(--wrong-bg);  animation: shake 0.3s ease; }
+  .opt-btn:disabled { cursor: default; }
+  @keyframes pulseG { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+  @keyframes shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+  .feedback { padding: 10px 14px; border-radius: 7px; font-size: 12.5px; line-height: 1.6; display: none; border-left: 3px solid; }
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.ok  { background: var(--correct-bg); border-color: var(--accent2); color: #7ee787; }
+  .feedback.err { background: var(--wrong-bg);   border-color: var(--wrong);   color: #ffa198; }
+  .feedback code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; }
+
+  .next-btn { display: none; align-self: flex-start; background: var(--accent); color: #000; border: none; border-radius: 7px; padding: 9px 22px; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+  .next-btn:hover { opacity: 0.85; }
+  .next-btn.show { display: inline-block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+  .finish-screen { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; gap: 14px; flex: 1; }
+  .finish-screen.show { display: flex; }
+  .finish-emoji { font-size: 52px; }
+  .finish-title { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent4)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .finish-sub { font-size: 13px; color: var(--text2); max-width: 380px; line-height: 1.7; }
+  .restart-btn { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); border-radius: 7px; padding: 9px 26px; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 6px; }
+  .restart-btn:hover { background: rgba(88,166,255,0.1); }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span class="logo">PUGA</span>
+    <h1>Construindo a Árvore Binária de Pesquisa em Java</h1>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+      <span class="progress-label" id="progLabel">0 / 10</span>
+    </div>
+  </header>
+
+  <aside class="timeline-panel" id="timeline">
+    <div class="timeline-title">🗂 Linha do Tempo</div>
+  </aside>
+
+  <main class="game-panel">
+    <div class="code-area" id="codeArea"></div>
+
+    <div class="bottom-area" id="bottomArea">
+      <div class="teach-phase" id="teachPhase">
+        <span class="teach-badge">📖 Entender primeiro</span>
+        <div class="teach-title"  id="teachTitle"></div>
+        <div class="teach-body"   id="teachBody"></div>
+        <div class="analogy-box"  id="analogyBox"></div>
+        <button class="ready-btn" onclick="showQuestion()">Entendi, quero responder →</button>
+      </div>
+
+      <div class="ask-phase" id="askPhase">
+        <div class="ask-step" id="askStep"></div>
+        <div class="ask-text"  id="askText"></div>
+        <div class="ask-sub"   id="askSub"></div>
+        <div class="opts-grid" id="optsGrid"></div>
+        <div class="feedback"  id="feedback"></div>
+        <button class="next-btn" id="nextBtn" onclick="nextStep()">Próximo passo →</button>
+      </div>
+    </div>
+
+    <div class="finish-screen" id="finishScreen">
+      <div class="finish-emoji">🌳</div>
+      <div class="finish-title">Árvore Construída!</div>
+      <div class="finish-sub">Você aprendeu cada conceito e construiu a Árvore Binária de Pesquisa do zero, no estilo do livro da Puga. Agora é hora de abrir o editor!</div>
+      <button class="restart-btn" onclick="restart()">↩ Recomeçar do início</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const STEPS = [
+
+  // 1 ─ Classe No
+  {
+    tag:'classe', tagLabel:'Classe', name:'Classe No',
+    why:'Fundação da estrutura: cada nó é uma peça independente.',
+
+    teachTitle: 'O que é uma Árvore Binária?',
+    teachBody: `Pense em um torneio de futebol. O campeão fica no topo, abaixo dele estão os dois finalistas, abaixo deles os semifinalistas — e assim por diante. Essa estrutura em camadas é o que chamamos de <strong>árvore</strong>.<br><br>
+Na programação, uma árvore é formada por <strong>peças conectadas</strong>. Cada peça guarda um valor e sabe quais são seus vizinhos abaixo. O nome dessa peça é <strong>nó</strong>. Em Java, para representar qualquer coisa do mundo real, criamos uma <strong>classe</strong>. Então, antes de montar a árvore, precisamos definir o que é um nó.`,
+    analogy: `🏆 <strong>Analogia:</strong> Antes de montar um quebra-cabeça, você precisa conhecer o formato de uma peça. O nó é essa peça. Só depois de entender a peça é que você pode pensar em como encaixar todas elas.`,
+
+    question: 'Qual é a primeira coisa que precisamos criar para ter uma Árvore Binária em Java?',
+    sub: 'Pense: a árvore é feita de peças. Qual peça precisa existir antes de tudo?',
+    options: [
+      { label: 'A classe que representa um nó',         desc: 'A menor peça da estrutura — sem ela nada existe', correct: true  },
+      { label: 'A classe que gerencia a árvore inteira', desc: 'Não dá para gerenciar o que ainda não existe',   correct: false },
+      { label: 'O método de inserção',                   desc: 'Inserir onde? A estrutura ainda não existe',     correct: false },
+      { label: 'O programa de teste com main()',         desc: 'Não há nada para testar ainda',                  correct: false },
+    ],
+    feedbackOk:  '✅ Correto! Antes de montar a árvore, precisamos definir o que é um nó. É a menor peça — como o tijolo antes da parede.',
+    feedbackErr: '❌ Precisamos da peça básica antes de qualquer outra coisa. Sem o nó, não há árvore.',
+    codeFile: 'No.java',
+    codeHtml: `<span class="cm">/**
+ * Classe que representa um nó da árvore binária.
+ */</span>
+<span class="kw">public class</span> <span class="cl">No</span> {`,
+  },
+
+  // 2 ─ Atributos
+  {
+    tag:'atributo', tagLabel:'Atributos', name:'Atributos de No',
+    why:'Três informações: o valor guardado e as referências para os dois filhos.',
+
+    teachTitle: 'O que cada nó precisa guardar?',
+    teachBody: `Imagine uma ficha de produto num estoque: ela tem o <strong>nome do produto</strong> e dois campos que dizem quais fichas estão "abaixo" dela na organização — uma para a esquerda e uma para a direita.<br><br>
+Todo nó de uma árvore binária precisa de exatamente <strong>três informações</strong>:<br>
+• O <strong>valor</strong> que ele armazena.<br>
+• Uma <strong>referência</strong> para o nó filho à esquerda.<br>
+• Uma <strong>referência</strong> para o nó filho à direita.<br><br>
+Em Java, essas informações são declaradas como <strong>atributos</strong> da classe. O valor é um número inteiro. As referências para os filhos são do mesmo tipo que o nó — porque cada filho também é um nó.`,
+    analogy: `🔗 <strong>Analogia:</strong> É como um elo de corrente dupla. Cada elo tem um número gravado no meio e dois ganchos: um aponta para o próximo elo da esquerda, outro para o da direita. Sem os ganchos, os elos ficam soltos e a corrente não existe.`,
+
+    question: 'Quais informações um nó de árvore binária precisa guardar?',
+    sub: 'Pense nos três elementos que discutimos: valor e os dois filhos.',
+    options: [
+      { label: 'Um valor e referências para filho esquerdo e filho direito', desc: 'As três informações essenciais de todo nó', correct: true  },
+      { label: 'Apenas o valor que ele armazena',                            desc: 'Sem referências, o nó fica isolado',        correct: false },
+      { label: 'Uma lista com todos os filhos possíveis',                    desc: 'Lista permitiria mais que dois filhos',      correct: false },
+      { label: 'O valor e a referência para o nó pai',                       desc: 'O pai não é necessário na implementação básica', correct: false },
+    ],
+    feedbackOk:  '✅ Exato! Todo nó guarda seu valor e sabe onde estão seus dois filhos — esquerdo e direito. São sempre esses três.',
+    feedbackErr: '❌ Um nó de árvore binária sempre tem três informações: o valor dele, e as referências para cada um dos dois filhos.',
+    codeFile: null,
+    codeHtml: `
+    <span class="kw">public</span> <span class="tp">int</span> info;    <span class="cm">// informação armazenada no nó</span>
+    <span class="kw">public</span> <span class="cl">No</span>  esq;     <span class="cm">// referência para o filho esquerdo</span>
+    <span class="kw">public</span> <span class="cl">No</span>  dir;     <span class="cm">// referência para o filho direito</span>`,
+  },
+
+  // 3 ─ Construtor
+  {
+    tag:'construtor', tagLabel:'Construtor', name:'Construtor de No',
+    why:'Todo nó nasce com um valor e sem filhos — ele é uma folha.',
+
+    teachTitle: 'O que acontece quando um nó é criado?',
+    teachBody: `Em Java, quando usamos <code>new</code> para criar um objeto, o <strong>construtor</strong> é executado automaticamente. Ele é responsável por definir os valores iniciais dos atributos.<br><br>
+Pense em um nó recém-criado: ele acabou de chegar à árvore. Ele já tem o <strong>valor</strong> que vai guardar — isso vem como parâmetro. Mas ainda <strong>não tem filhos</strong>. Ele é uma folha: o último da linha, sem ninguém abaixo.<br><br>
+Em Java, "sem filhos" se representa com <code>null</code>. Os filhos só aparecem depois, quando outros valores forem inseridos.`,
+    analogy: `🌱 <strong>Analogia:</strong> Uma árvore recém-plantada tem um tronco, mas ainda não tem galhos. Os galhos crescem depois. O construtor é o momento do plantio — o valor chega, mas as conexões ainda não existem.`,
+
+    question: 'Quando um novo nó é criado, como devem estar seus filhos?',
+    sub: 'Um nó recém-criado ainda não tem nenhuma conexão. Como isso é representado em Java?',
+    options: [
+      { label: 'Sem filhos — representado por null',        desc: 'Todo nó começa como folha; os filhos vêm depois', correct: true  },
+      { label: 'Com dois filhos já definidos',              desc: 'Impossível — onde estariam esses filhos?',        correct: false },
+      { label: 'Com uma lista vazia de filhos',             desc: 'Árvore binária não usa lista para filhos',        correct: false },
+      { label: 'Apontando para o próprio nó (recursivo)',   desc: 'Isso causaria um loop infinito',                  correct: false },
+    ],
+    feedbackOk:  '✅ Perfeito! Todo nó começa sem filhos — representado por <code>null</code>. Os filhos são conectados durante as inserções.',
+    feedbackErr: '❌ Um nó recém-criado não tem filhos ainda. Em Java, ausência de referência é representada por <code>null</code>.',
+    codeFile: null,
+    codeHtml: `
+    <span class="kw">public</span> <span class="fn">No</span>(<span class="tp">int</span> info) {
+        <span class="kw">this</span>.info = info;
+        <span class="kw">this</span>.esq  = <span class="kw">null</span>;   <span class="cm">// ainda sem filho esquerdo</span>
+        <span class="kw">this</span>.dir  = <span class="kw">null</span>;   <span class="cm">// ainda sem filho direito</span>
+    }
+}`,
+  },
+
+  // 4 ─ Classe ArvoreBinaria
+  {
+    tag:'classe', tagLabel:'Classe', name:'Classe ArvoreBinaria',
+    why:'Gerencia toda a estrutura. Guarda só a referência para a raiz.',
+
+    teachTitle: 'Quem organiza os nós?',
+    teachBody: `Já sabemos o que é um nó. Mas quem decide onde cada nó vai ficar? Quem executa as operações de inserir, pesquisar e percorrer a árvore?<br><br>
+Para isso, precisamos de uma <strong>segunda classe</strong> — uma gerente. Ela não é um nó. Ela apenas <strong>conhece o ponto de entrada</strong> da estrutura: o nó do topo, chamado de <strong>raiz</strong>. A partir da raiz, é possível chegar a qualquer outro nó seguindo as referências.<br><br>
+Essa classe começa com a raiz valendo <code>null</code>, pois a árvore ainda está vazia quando é criada.`,
+    analogy: `🏢 <strong>Analogia:</strong> Imagine a recepção de um hotel. O recepcionista não mora nos quartos — ele só sabe em qual quarto fica a entrada principal. A partir daí, qualquer hóspede pode ser encontrado. A classe gerente funciona assim: ela guarda apenas o "quarto da entrada" (a raiz) e a partir dele acessa tudo.`,
+
+    question: 'O que a classe gerente da árvore precisa guardar para ter acesso a toda a estrutura?',
+    sub: 'Ela não armazena todos os nós. Guarda apenas um — o mais importante.',
+    options: [
+      { label: 'Apenas a referência para o nó do topo (raiz)', desc: 'A partir da raiz, todos os outros são acessíveis', correct: true  },
+      { label: 'Uma lista com todos os nós da árvore',          desc: 'Isso seria redundante — os nós já se conectam',   correct: false },
+      { label: 'O total de nós e o maior valor',                desc: 'Esses dados não são necessários para operar',     correct: false },
+      { label: 'Referências para todos os nós folha',           desc: 'As folhas mudam a cada inserção',                 correct: false },
+    ],
+    feedbackOk:  '✅ Isso! Guardando só a raiz, a classe consegue chegar a qualquer nó da árvore — basta seguir as referências dos filhos.',
+    feedbackErr: '❌ A raiz é o ponto de entrada. A partir dela, seguindo os filhos, qualquer nó pode ser alcançado.',
+    codeFile: 'ArvoreBinaria.java',
+    codeHtml: `<span class="cm">/**
+ * Classe que implementa uma Árvore Binária de Pesquisa.
+ * Regra: valores menores à esquerda, maiores à direita.
+ */</span>
+<span class="kw">public class</span> <span class="cl">ArvoreBinaria</span> {
+
+    <span class="kw">private</span> <span class="cl">No</span> raiz;
+
+    <span class="kw">public</span> <span class="fn">ArvoreBinaria</span>() {
+        <span class="kw">this</span>.raiz = <span class="kw">null</span>;   <span class="cm">// árvore começa vazia</span>
+    }`,
+  },
+
+  // 5 ─ inserir() público
+  {
+    tag:'metodo', tagLabel:'Método', name:'inserir() — interface pública',
+    why:'Simples para quem usa. Esconde a complexidade no auxiliar privado.',
+
+    teachTitle: 'Como inserir um valor na árvore?',
+    teachBody: `A Árvore Binária de Pesquisa tem uma regra simples de organização:<br><br>
+• Se o valor novo é <strong>menor</strong> que o nó atual → vai para o <strong>lado esquerdo</strong>.<br>
+• Se é <strong>maior</strong> → vai para o <strong>lado direito</strong>.<br>
+• Isso se repete descendo pela árvore até encontrar um espaço vazio.<br><br>
+Para implementar isso, vamos criar <strong>dois métodos</strong>: um que o usuário da classe chama (simples, sem detalhes), e um auxiliar interno que faz o trabalho real de percorrer a árvore. Essa separação é uma boa prática — quem usa a classe não precisa saber como a busca funciona por dentro.`,
+    analogy: `📦 <strong>Analogia:</strong> Quando você pede uma pizza por delivery, só faz o pedido (método simples). Por trás, existe toda uma operação de preparo e entrega que você não precisa conhecer (método interno). A interface pública é o pedido — simples e direta.`,
+
+    question: 'Como deve ser o método de inserção que qualquer código externo pode chamar?',
+    sub: 'Pense na separação: o que a quem usa a classe deve ser exposto?',
+    options: [
+      { label: 'Público, recebe só o valor a inserir',             desc: 'Simples para quem chama; a lógica fica interna', correct: true  },
+      { label: 'Público, recebe o valor e a referência da raiz',   desc: 'Expõe detalhes internos para quem usa a classe', correct: false },
+      { label: 'Privado, recebe só o valor a inserir',             desc: 'Privado não pode ser chamado de fora da classe',  correct: false },
+      { label: 'Público e estático, sem parâmetros',               desc: 'Estático não acessa o estado da instância',       correct: false },
+    ],
+    feedbackOk:  '✅ Ótimo! O método público recebe só o valor — simples para quem usa. A lógica de percorrer fica escondida no método auxiliar privado.',
+    feedbackErr: '❌ O método público deve ser o mais simples possível. A complexidade fica escondida num auxiliar que só a própria classe conhece.',
+    codeFile: null,
+    codeHtml: `
+    <span class="cm">// ── INSERÇÃO ───────────────────────────────────────</span>
+
+    <span class="kw">public void</span> <span class="fn">inserir</span>(<span class="tp">int</span> info) {
+        raiz = <span class="fn">inserirNo</span>(raiz, info);
+    }`,
+  },
+
+  // 6 ─ inserirNo() recursivo
+  {
+    tag:'metodo', tagLabel:'Método', name:'inserirNo() — recursivo',
+    why:'Desce comparando valores. Para ao encontrar espaço vazio.',
+
+    teachTitle: 'O que é recursão e por que usamos aqui?',
+    teachBody: `<strong>Recursão</strong> é quando um método resolve um problema chamando <strong>a si mesmo</strong> com uma versão menor do mesmo problema.<br><br>
+Para inserir numa árvore: ou inserimos na subárvore da esquerda, ou na da direita. Cada uma delas é uma árvore menor. Esse processo se repete até chegarmos num ponto sem saída — um espaço vazio. Esse momento em que a recursão <strong>para</strong> se chama <strong>caso base</strong>. Sem ele, o método chamaria a si mesmo para sempre.<br><br>
+Na inserção, o caso base é simples: quando chegamos a um espaço vazio, esse é o lugar certo. Criamos o nó ali.`,
+    analogy: `🪆 <strong>Analogia:</strong> Imagine abrir bonecas russas (matrioskas). Você abre a maior, tem uma menor dentro, abre essa, tem outra menor... até chegar na que não abre mais. Essa última é o caso base. Cada abertura é uma chamada recursiva.`,
+
+    question: 'O que o método auxiliar de inserção deve fazer ao encontrar um espaço vazio na árvore?',
+    sub: 'Espaço vazio significa que encontramos o lugar certo. O que fazemos?',
+    options: [
+      { label: 'Criar um novo nó naquele espaço e retorná-lo', desc: 'Esse é o caso base — o lugar certo foi encontrado', correct: true  },
+      { label: 'Voltar para a raiz e recomeçar a busca',        desc: 'Causaria um loop infinito',                        correct: false },
+      { label: 'Retornar sem fazer nada',                       desc: 'O nó nunca seria inserido',                        correct: false },
+      { label: 'Lançar um erro — espaço vazio é um problema',   desc: 'Espaço vazio não é erro, é o destino',             correct: false },
+    ],
+    feedbackOk:  '✅ Exato! Espaço vazio = lugar encontrado. Criamos o nó ali e retornamos. Esse é o caso base da recursão — onde a descida para.',
+    feedbackErr: '❌ Espaço vazio é uma boa notícia: encontramos o lugar certo. A resposta é criar o nó ali.',
+    codeFile: null,
+    codeHtml: `
+    <span class="kw">private</span> <span class="cl">No</span> <span class="fn">inserirNo</span>(<span class="cl">No</span> noAtual, <span class="tp">int</span> info) {
+        <span class="kw">if</span> (noAtual == <span class="kw">null</span>) {
+            <span class="kw">return new</span> <span class="cl">No</span>(info);                          <span class="cm">// caso base: lugar encontrado</span>
+        }
+        <span class="kw">if</span> (info &lt; noAtual.info) {
+            noAtual.esq = <span class="fn">inserirNo</span>(noAtual.esq, info);    <span class="cm">// desce à esquerda</span>
+        } <span class="kw">else if</span> (info &gt; noAtual.info) {
+            noAtual.dir = <span class="fn">inserirNo</span>(noAtual.dir, info);    <span class="cm">// desce à direita</span>
+        }
+        <span class="kw">return</span> noAtual;
+    }`,
+  },
+
+  // 7 ─ pesquisar()
+  {
+    tag:'metodo', tagLabel:'Método', name:'pesquisar()',
+    why:'A cada nó descarta metade da árvore — muito mais rápido que uma lista.',
+
+    teachTitle: 'Por que pesquisar na árvore é mais rápido?',
+    teachBody: `Imagine procurar um nome numa lista telefônica de mil páginas. Se você começar do início, pode demorar muito. Mas se a lista estiver em ordem alfabética e você abrir no meio, já sabe se o nome está na primeira ou na segunda metade — e descarta 500 páginas de uma vez.<br><br>
+Na Árvore Binária de Pesquisa acontece algo similar. Em cada nó você faz uma comparação e escolhe <strong>um único caminho</strong>: esquerda ou direita. O outro lado é completamente descartado. Isso acontece em cada nível até encontrar o valor ou chegar num espaço vazio.`,
+    analogy: `🎯 <strong>Analogia:</strong> O jogo de adivinhar número. "Pensei num número de 1 a 100." — "É maior que 50?" — "Sim." Pronto: os 50 menores foram descartados. A árvore faz exatamente isso em cada nó — uma pergunta, metade eliminada.`,
+
+    question: 'O que torna a pesquisa numa Árvore Binária de Pesquisa mais eficiente que numa lista comum?',
+    sub: 'O que acontece com as possibilidades a cada nó visitado?',
+    options: [
+      { label: 'A cada nó, descarta-se metade das possibilidades', desc: 'Vai só para esquerda ou só para direita — nunca os dois', correct: true  },
+      { label: 'A árvore ordena os nós antes de pesquisar',         desc: 'A ordenação já existe na estrutura, não acontece na pesquisa', correct: false },
+      { label: 'A pesquisa verifica todos os nós em paralelo',      desc: 'Não existe paralelismo aqui — é uma busca sequencial',         correct: false },
+      { label: 'Os nós têm índices numéricos como num array',        desc: 'Árvore não tem posições fixas como arrays',                    correct: false },
+    ],
+    feedbackOk:  '✅ Isso! A cada nó a pesquisa escolhe um único caminho e descarta o outro lado inteiro. Com muitos dados, isso faz uma diferença enorme.',
+    feedbackErr: '❌ A chave está em nunca verificar os dois lados. Cada nó é uma decisão: esquerda ou direita — e metade da árvore é eliminada.',
+    codeFile: null,
+    codeHtml: `
+    <span class="cm">// ── PESQUISA ───────────────────────────────────────</span>
+
+    <span class="kw">public boolean</span> <span class="fn">pesquisar</span>(<span class="tp">int</span> info) {
+        <span class="kw">return</span> <span class="fn">pesquisarNo</span>(raiz, info);
+    }
+
+    <span class="kw">private boolean</span> <span class="fn">pesquisarNo</span>(<span class="cl">No</span> noAtual, <span class="tp">int</span> info) {
+        <span class="kw">if</span> (noAtual == <span class="kw">null</span>) {
+            <span class="kw">return false</span>;                                      <span class="cm">// não encontrado</span>
+        } <span class="kw">else if</span> (info == noAtual.info) {
+            <span class="kw">return true</span>;                                       <span class="cm">// encontrou!</span>
+        } <span class="kw">else if</span> (info &lt; noAtual.info) {
+            <span class="kw">return</span> <span class="fn">pesquisarNo</span>(noAtual.esq, info);            <span class="cm">// busca à esquerda</span>
+        } <span class="kw">else</span> {
+            <span class="kw">return</span> <span class="fn">pesquisarNo</span>(noAtual.dir, info);            <span class="cm">// busca à direita</span>
+        }
+    }`,
+  },
+
+  // 8 ─ caminhamento
+  {
+    tag:'metodo', tagLabel:'Método', name:'caminhamentoEmOrdem()',
+    why:'Esq → Raiz → Dir produz saída crescente automaticamente.',
+
+    teachTitle: 'O que significa "caminhar" pela árvore?',
+    teachBody: `Caminhar pela árvore significa <strong>visitar todos os nós</strong> em uma ordem específica. Existem três ordens clássicas, e cada uma tem um uso diferente.<br><br>
+A mais importante para nós é aquela em que visitamos primeiro tudo que está à <strong>esquerda</strong>, depois o <strong>nó atual</strong>, depois tudo que está à <strong>direita</strong>. Esse padrão se repete recursivamente em cada subárvore.<br><br>
+Essa ordem tem uma propriedade muito especial na Árvore Binária de Pesquisa: como os valores menores sempre ficam à esquerda e os maiores à direita, visitar nessa sequência produz os valores <strong>sempre em ordem crescente</strong> — independentemente de como foram inseridos.`,
+    analogy: `📚 <strong>Analogia:</strong> Imagine uma estante em forma de árvore. Para listar todos os livros em ordem de número, você começa pela prateleira mais à esquerda, depois a do centro, depois a mais à direita — e repete isso para cada grupo. O resultado é sempre a lista em sequência crescente.`,
+
+    question: 'Qual é a ordem de visita que produz os valores em ordem crescente?',
+    sub: 'Pense nas três direções possíveis: esquerda, o nó atual e direita. Qual sequência faz sentido para ordenar?',
+    options: [
+      { label: 'Esquerda → Nó atual → Direita', desc: 'Os menores primeiro, depois o atual, depois os maiores', correct: true  },
+      { label: 'Nó atual → Esquerda → Direita', desc: 'O nó atual sairia antes dos menores — quebraria a ordem', correct: false },
+      { label: 'Esquerda → Direita → Nó atual', desc: 'O nó atual ficaria no final — fora de ordem',             correct: false },
+      { label: 'Direita → Nó atual → Esquerda', desc: 'Os maiores viriam primeiro — ordem decrescente',           correct: false },
+    ],
+    feedbackOk:  '✅ Perfeito! Esquerda → Nó atual → Direita. Como os menores estão sempre à esquerda e os maiores à direita, essa ordem produz a sequência crescente automaticamente.',
+    feedbackErr: '❌ Para sair em ordem crescente, visitamos primeiro os menores (esquerda), depois o nó atual, depois os maiores (direita).',
+    codeFile: null,
+    codeHtml: `
+    <span class="cm">// ── CAMINHAMENTO EM ORDEM ──────────────────────────</span>
+
+    <span class="kw">public void</span> <span class="fn">imprimirEmOrdem</span>() {
+        System.out.<span class="fn">print</span>(<span class="str">"Em ordem: "</span>);
+        <span class="fn">caminhamentoEmOrdem</span>(raiz);
+        System.out.<span class="fn">println</span>();
+    }
+
+    <span class="kw">private void</span> <span class="fn">caminhamentoEmOrdem</span>(<span class="cl">No</span> noAtual) {
+        <span class="kw">if</span> (noAtual != <span class="kw">null</span>) {
+            <span class="fn">caminhamentoEmOrdem</span>(noAtual.esq);              <span class="cm">// visita subárvore esquerda</span>
+            System.out.<span class="fn">print</span>(noAtual.info + <span class="str">"  "</span>);       <span class="cm">// visita o nó atual</span>
+            <span class="fn">caminhamentoEmOrdem</span>(noAtual.dir);              <span class="cm">// visita subárvore direita</span>
+        }
+    }
+
+}`,
+  },
+
+  // 9 ─ Classe Programa
+  {
+    tag:'teste', tagLabel:'Teste', name:'Classe Programa',
+    why:'Responsabilidade única: cada classe faz uma coisa só.',
+
+    teachTitle: 'Por que separar o teste numa classe própria?',
+    teachBody: `Em orientação a objetos existe um princípio importante: cada classe deve ter <strong>uma única responsabilidade</strong>. Isso torna o código mais organizado e fácil de manter.<br><br>
+Até agora construímos duas classes: uma que define a peça (o nó) e uma que gerencia as operações (a árvore). Nenhuma delas deve se preocupar em "rodar o programa". Essa tarefa fica numa <strong>terceira classe</strong>, que contém o método <code>main()</code> — o ponto de entrada de qualquer programa Java. Ela existe apenas para criar os objetos e testá-los.`,
+    analogy: `🏭 <strong>Analogia:</strong> Uma fábrica tem setores separados: quem fabrica a peça, quem monta o produto e quem testa a qualidade. Misturar tudo num setor só cria confusão. Na programação é igual — cada classe tem seu papel bem definido.`,
+
+    question: 'Por que o código de teste (com main) fica numa classe separada?',
+    sub: 'Qual é o princípio que justifica essa separação?',
+    options: [
+      { label: 'Cada classe deve ter uma única responsabilidade', desc: 'Separar papéis torna o código mais organizado',       correct: true  },
+      { label: 'Java exige que main() fique numa classe própria',  desc: 'Java permite main() em qualquer classe',             correct: false },
+      { label: 'Para o programa compilar mais rapidamente',        desc: 'A separação não afeta a velocidade de compilação',   correct: false },
+      { label: 'Para proteger o código da árvore de alterações',   desc: 'Separar não protege — isso é papel do encapsulamento', correct: false },
+    ],
+    feedbackOk:  '✅ Certo! Uma responsabilidade por classe. A peça cuida de ser peça, a árvore cuida das operações, e o programa cuida de testar tudo. Cada um no seu papel.',
+    feedbackErr: '❌ A separação é sobre responsabilidades. Cada classe faz uma coisa só — princípio fundamental da orientação a objetos.',
+    codeFile: 'Programa.java',
+    codeHtml: `<span class="cm">/**
+ * Classe principal para teste da Árvore Binária.
+ */</span>
+<span class="kw">public class</span> <span class="cl">Programa</span> {
+
+    <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {
+
+        <span class="cl">ArvoreBinaria</span> arvore = <span class="kw">new</span> <span class="cl">ArvoreBinaria</span>();`,
+  },
+
+  // 10 ─ Testando
+  {
+    tag:'teste', tagLabel:'Teste', name:'Inserindo e verificando',
+    why:'O caminhamento prova que a árvore se organiza durante a inserção.',
+
+    teachTitle: 'O momento de ver tudo funcionando',
+    teachBody: `Vamos inserir sete números na árvore: <strong>50, 30, 70, 20, 40, 60, 80</strong>. O primeiro vira a raiz. Cada um dos seguintes desce pela árvore comparando valores — menor vai à esquerda, maior vai à direita — até encontrar seu lugar.<br><br>
+Depois de inserir todos, chamamos o método de impressão em ordem. Lembre da regra: ele visita primeiro tudo à esquerda, depois o nó atual, depois tudo à direita. Como os menores sempre ficaram à esquerda durante a inserção, a saída será sempre ordenada — mesmo que os valores tenham sido inseridos fora de ordem.`,
+    analogy: `✨ <strong>O momento mágico:</strong> Você inseriu os números numa ordem aparentemente aleatória. Mas ao percorrer a árvore em ordem, eles saem perfeitamente organizados. A estrutura fez o trabalho de ordenação silenciosamente, durante cada inserção.`,
+
+    question: 'Após inserir 50, 30, 70, 20, 40, 60, 80 e percorrer a árvore em ordem, qual será a saída?',
+    sub: 'Aplique a regra do caminhamento: esquerda → nó atual → direita.',
+    options: [
+      { label: '20  30  40  50  60  70  80', desc: 'Crescente — resultado garantido pelo caminhamento em ordem', correct: true  },
+      { label: '50  30  70  20  40  60  80', desc: 'Essa foi a ordem de inserção — não é o caminhamento em ordem', correct: false },
+      { label: '80  70  60  50  40  30  20', desc: 'Decrescente — seria direita → nó → esquerda',                  correct: false },
+      { label: '20  40  30  80  60  70  50', desc: 'Sem padrão definido',                                           correct: false },
+    ],
+    feedbackOk:  '✅ Perfeito! O caminhamento em ordem numa Árvore Binária de Pesquisa sempre produz saída crescente. A estrutura organiza durante a inserção — não na hora de imprimir.',
+    feedbackErr: '❌ O caminhamento em ordem visita sempre os menores (esquerda) antes do nó atual, e os maiores (direita) depois. O resultado é sempre crescente.',
+    codeFile: null,
+    codeHtml: `
+        <span class="cm">// inserindo informações na árvore</span>
+        arvore.<span class="fn">inserir</span>(<span class="num">50</span>);
+        arvore.<span class="fn">inserir</span>(<span class="num">30</span>);
+        arvore.<span class="fn">inserir</span>(<span class="num">70</span>);
+        arvore.<span class="fn">inserir</span>(<span class="num">20</span>);
+        arvore.<span class="fn">inserir</span>(<span class="num">40</span>);
+        arvore.<span class="fn">inserir</span>(<span class="num">60</span>);
+        arvore.<span class="fn">inserir</span>(<span class="num">80</span>);
+
+        arvore.<span class="fn">imprimirEmOrdem</span>();
+        <span class="cm">// Saída: Em ordem: 20  30  40  50  60  70  80</span>
+
+        System.out.<span class="fn">println</span>(<span class="str">"Pesquisa 40: "</span> + arvore.<span class="fn">pesquisar</span>(<span class="num">40</span>)); <span class="cm">// true</span>
+        System.out.<span class="fn">println</span>(<span class="str">"Pesquisa 99: "</span> + arvore.<span class="fn">pesquisar</span>(<span class="num">99</span>)); <span class="cm">// false</span>
+    }
+}`,
+  },
+];
+
+// ─── ESTADO ───────────────────────────────────────────────────────────────────
+let cur = 0, answered = false, codeBlocks = {};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function init() { loadStep(0); }
+
+function loadStep(idx) {
+  cur = idx; answered = false;
+  const s = STEPS[idx];
+  document.getElementById('teachTitle').textContent = s.teachTitle;
+  document.getElementById('teachBody').innerHTML    = s.teachBody;
+  document.getElementById('analogyBox').innerHTML   = s.analogy;
+  document.getElementById('teachPhase').style.display = 'flex';
+  document.getElementById('askPhase').className = 'ask-phase';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('nextBtn').className  = 'next-btn';
+  document.getElementById('optsGrid').innerHTML = '';
+  updateProgress();
+  document.getElementById('bottomArea').scrollTop = 0;
+}
+
+function showQuestion() {
+  const s = STEPS[cur];
+  document.getElementById('teachPhase').style.display = 'none';
+  document.getElementById('askStep').textContent = `Passo ${cur + 1} de ${STEPS.length} — agora é com você`;
+  document.getElementById('askText').textContent  = s.question;
+  document.getElementById('askSub').textContent   = s.sub;
+  const grid = document.getElementById('optsGrid');
+  grid.innerHTML = '';
+  shuffle(s.options).forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="ol">${opt.label}</span><span class="od">${opt.desc}</span>`;
+    btn.onclick = () => handleAnswer(opt.correct, btn, s);
+    grid.appendChild(btn);
+  });
+  document.getElementById('askPhase').className = 'ask-phase show';
+  document.getElementById('bottomArea').scrollTop = 0;
+}
+
+function handleAnswer(correct, btn, step) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  const fb = document.getElementById('feedback');
+  if (correct) {
+    btn.classList.add('correct');
+    fb.className = 'feedback ok show';
+    fb.innerHTML = step.feedbackOk;
+    revealCode(step);
+    addTimeline(cur, step);
+    document.getElementById('nextBtn').className = 'next-btn show';
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback err show';
+    fb.innerHTML = step.feedbackErr;
+    setTimeout(() => {
+      document.querySelectorAll('.opt-btn').forEach(b => {
+        if (!b.classList.contains('wrong')) b.disabled = false;
+      });
+      answered = false;
+    }, 700);
+  }
+}
+
+function revealCode(step) {
+  const area = document.getElementById('codeArea');
+  if (step.codeFile && !codeBlocks[step.codeFile]) {
+    const block = document.createElement('div');
+    block.className = 'code-block';
+    block.innerHTML = `<div class="code-hdr"><span class="cdot r"></span><span class="cdot y"></span><span class="cdot g"></span><span style="margin-left:8px">${step.codeFile}</span></div><pre id="pre-${step.codeFile}"></pre>`;
+    area.appendChild(block);
+    codeBlocks[step.codeFile] = document.getElementById(`pre-${step.codeFile}`);
+  }
+  const keys = Object.keys(codeBlocks);
+  const targetPre = step.codeFile ? codeBlocks[step.codeFile] : (keys.length ? codeBlocks[keys[keys.length-1]] : null);
+  if (targetPre) {
+    const seg = document.createElement('span');
+    seg.className = 'seg rev';
+    seg.innerHTML = step.codeHtml + '\n';
+    targetPre.appendChild(seg);
+    setTimeout(() => area.scrollTop = area.scrollHeight, 120);
+  }
+}
+
+function addTimeline(idx, step) {
+  const tl = document.getElementById('timeline');
+  const item = document.createElement('div');
+  item.className = 'tl-item';
+  const isLast = idx === STEPS.length - 1;
+  item.innerHTML = `<div class="tl-line"><div class="tl-dot done">${idx+1}</div>${!isLast?'<div class="tl-conn done"></div>':''}</div><div class="tl-body"><span class="tl-tag tag-${step.tag}">${step.tagLabel}</span><div class="tl-name">${step.name}</div><div class="tl-why">${step.why}</div></div>`;
+  tl.appendChild(item);
+  requestAnimationFrame(() => item.classList.add('vis'));
+  tl.scrollTop = tl.scrollHeight;
+}
+
+function updateProgress() {
+  const pct = Math.round((cur / STEPS.length) * 100);
+  document.getElementById('progFill').style.width  = pct + '%';
+  document.getElementById('progLabel').textContent = `${cur} / ${STEPS.length}`;
+}
+
+function nextStep() {
+  if (cur + 1 >= STEPS.length) { showFinish(); return; }
+  loadStep(cur + 1);
+}
+
+function showFinish() {
+  document.getElementById('bottomArea').style.display = 'none';
+  document.getElementById('finishScreen').classList.add('show');
+  document.getElementById('progFill').style.width  = '100%';
+  document.getElementById('progLabel').textContent = `${STEPS.length} / ${STEPS.length}`;
+}
+
+function restart() {
+  cur = 0; answered = false; codeBlocks = {};
+  document.getElementById('codeArea').innerHTML = '';
+  document.getElementById('timeline').innerHTML = '<div class="timeline-title">🗂 Linha do Tempo</div>';
+  document.getElementById('finishScreen').classList.remove('show');
+  document.getElementById('bottomArea').style.display = '';
+  loadStep(0);
+}
+
+init();
+</script>
+</body>
+</html>
